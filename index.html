@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Немисче Аркан Тартыш</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f4f8; margin: 0; padding: 20px; }
+        .battle-field { display: flex; justify-content: space-around; align-items: center; height: 150px; background: white; border-radius: 15px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .character { font-size: 50px; transition: 0.5s; position: absolute; }
+        #player { left: 20%; }
+        #robot { right: 20%; }
+        .rope { width: 100%; height: 5px; background: #8b4513; position: absolute; z-index: 0; }
+        .quiz-card { background: #1a237e; color: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        input { width: 80%; padding: 15px; font-size: 20px; border-radius: 10px; border: none; margin-top: 15px; text-align: center; }
+        button { width: 85%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 10px; font-size: 20px; margin-top: 15px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Немисче сөздү тап!</h2>
+    <div class="battle-field">
+        <div class="rope"></div>
+        <div id="player" class="character">👲</div>
+        <div id="robot" class="character">🤖</div>
+    </div>
+    <div class="quiz-card">
+        <h1 id="question">Apple</h1>
+        <p>Бул сөздүн немисчеси кандай?</p>
+        <input type="text" id="answer" placeholder="Жоопту жазыңыз...">
+        <button onclick="check()">GO!</button>
+    </div>
+    <script>
+        let pos = 0;
+        const words = [
+            {q: "Apple (Алма)", a: "Apfel"},
+            {q: "Bread (Нан)", a: "Brot"},
+            {q: "Water (Суу)", a: "Wasser"},
+            {q: "Book (Китеп)", a: "Buch"}
+        ];
+        let current = 0;
+        function check() {
+            let user = document.getElementById("answer").value.trim().toLowerCase();
+            let p = document.getElementById("player");
+            if(user === words[current].a.toLowerCase()) {
+                pos -= 40; // Сиз тарапка тартат
+                alert("Туура! Жарайсыз!");
+            } else {
+                pos += 40; // Робот тарапка тартат
+                alert("Ката! Туура жооп: " + words[current].a);
+            }
+            p.style.transform = `translateX(${pos}px)`;
+            current = (current + 1) % words.length;
+            document.getElementById("question").innerText = words[current].q;
+            document.getElementById("answer").value = "";
+        }
+    </script>
+</body>
+</html>

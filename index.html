@@ -7,52 +7,73 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --blue: #3498db; --red: #e74c3c; }
+        :root { --blue: #3498db; --red: #e74c3c; --navy: #1a237e; }
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f4f7f6; margin: 0; padding: 15px; }
-        .setup-screen { background: white; padding: 30px; border-radius: 20px; max-width: 400px; margin: 50px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .setup-screen { background: white; padding: 30px; border-radius: 20px; max-width: 400px; margin: 40px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        
+        /* Аркан жана Смайликтер */
         .battle-field { display: flex; justify-content: space-around; align-items: center; height: 160px; background: white; border-radius: 15px; margin: 20px 0; position: relative; overflow: hidden; border: 2px solid #ddd; }
         .rope { width: 100%; height: 6px; background: #8b4513; position: absolute; z-index: 1; }
-        .character { font-size: 60px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: absolute; z-index: 2; top: 25px; }
+        .character { font-size: 60px; position: absolute; z-index: 2; top: 25px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         #player1 { left: 15%; } #player2 { right: 15%; }
-        .quiz-card { background: #1a237e; color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        
+        /* Тартуу анимациясы */
+        .pull-anim { animation: pull 0.4s ease-in-out; }
+        @keyframes pull {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1); }
+        }
+
+        .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         input { width: 85%; padding: 15px; font-size: 22px; border-radius: 10px; border: none; margin-top: 15px; text-align: center; outline: none; }
-        button { width: 95%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 10px; font-size: 22px; margin-top: 20px; cursor: pointer; font-weight: bold; }
-        .team-btn { padding: 15px; margin: 10px; border: none; border-radius: 10px; color: white; font-size: 18px; cursor: pointer; width: 80%; }
-        .score-board { display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .btn-main { width: 95%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 10px; font-size: 22px; margin-top: 20px; cursor: pointer; font-weight: bold; }
+        
+        .stat-box { display: flex; justify-content: space-around; background: #fff; padding: 10px; border-radius: 10px; margin-top: 15px; font-size: 14px; border: 1px solid #ddd; }
+        .lang-btn { padding: 12px; margin: 5px; border: 2px solid var(--navy); border-radius: 10px; background: white; color: var(--navy); font-weight: bold; cursor: pointer; width: 45%; }
+        .lang-btn.active { background: var(--navy); color: white; }
+        .team-btn { padding: 15px; margin: 10px; border: none; border-radius: 10px; color: white; font-size: 18px; cursor: pointer; width: 80%; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="lobby" class="setup-screen">
-        <h2>Топту тандап кир:</h2>
+        <h3>Тилди тандаңыз / Выберите язык:</h3>
+        <button id="btn-kg" class="lang-btn active" onclick="setLang('kg')">Кыргызча</button>
+        <button id="btn-ru" class="lang-btn" onclick="setLang('ru')">Русский</button>
+        <hr style="margin: 20px 0; border: 0.5px solid #eee;">
+        <h3 id="team-title">Топту тандап кир:</h3>
         <button class="team-btn" style="background:var(--blue)" onclick="joinTeam(1)">Сол топ (Көк)</button>
         <button class="team-btn" style="background:var(--red)" onclick="joinTeam(2)">Оң топ (Кызыл)</button>
     </div>
 
     <div id="game-ui" style="display:none;">
-        <div class="score-board">
-            <span style="color:var(--blue)">Көк: <span id="s1">0</span></span>
-            <span style="color:var(--red)">Кызыл: <span id="s2">0</span></span>
+        <div style="display:flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+            <span style="color:var(--blue)">Көк Топ</span>
+            <span style="color:var(--red)">Кызыл Топ</span>
         </div>
-
+        
         <div class="battle-field">
             <div class="rope"></div>
             <div id="rope-group" style="position: absolute; width: 100%; transition: 0.5s;">
-                <div id="player1" class="character">👲</div>
-                <div id="player2" class="character">👩‍🦰</div>
+                <div id="player1" class="character">🧑🏻‍💼</div>
+                <div id="player2" class="character">👩🏻‍💼</div>
             </div>
         </div>
 
         <div class="quiz-card">
             <h2 id="question">Сөз...</h2>
-            <p id="team-info" style="font-size: 14px; opacity: 0.8;"></p>
-            <input type="text" id="answer" placeholder="Немисчесин жаз..." autocomplete="off">
-            <button onclick="check()">GO!</button>
+            <input type="text" id="answer" placeholder="..." autocomplete="off">
+            <button class="btn-main" onclick="check()" id="go-btn">GO!</button>
+        </div>
+
+        <div class="stat-box">
+            <div style="color:var(--blue)">Туура: <span id="s1-correct">0</span> | Ката: <span id="s1-wrong">0</span></div>
+            <div style="color:var(--red)">Туура: <span id="s2-correct">0</span> | Ката: <span id="s2-wrong">0</span></div>
         </div>
     </div>
 
     <script>
-        // СИЗДИН FIREBASE ШИЛТЕМЕҢИЗ ТУУРАЛАНДЫ:
         const firebaseConfig = {
             databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" 
         };
@@ -60,34 +81,43 @@
         const db = firebase.database().ref('game_state');
 
         let myTeam = 0;
+        let selectedLang = 'kg';
         let currentWordIndex = 0;
 
-        // СӨЗДӨРДҮН ТИЗМЕСИ
         const words = [
-            {k: "Энергия", n: "die Energie"}, {k: "Өз алдынча", n: "selbst"},
-            {k: "Алмаштыруу", n: "wechseln"}, {k: "Шып", n: "die Decke"},
-            {k: "Ыраазычылык", n: "der Dank"}, {k: "Эч нерсе", n: "nichts"},
-            {k: "Ручка", n: "der Kugelschreiber"}, {k: "Кулпу", n: "das Schloss"},
-            {k: "Сүрөт (картина)", n: "das Bild"}, {k: "Дубал", n: "die Wand"},
-            {k: "Мышык", n: "die Katze"}, {k: "Тынчтык", n: "die Ruhe"},
-            {k: "Тоскоол болуу", n: "stören"}, {k: "Карандаш", n: "der Stift"},
-            {k: "Куруу", n: "bauen"}, {k: "Өсүмдүк", n: "die Pflanze"},
-            {k: "Таштанды", n: "der Müll"}, {k: "Билдирүү", n: "die Mitteilung"},
-            {k: "Пластик", n: "das Plastik"}, {k: "Келишим", n: "der Vertrag"},
-            {k: "Лифт", n: "der Aufzug"}, {k: "Почта кутусу", n: "der Briefkasten"}
+            {kg: "Энергия", ru: "Энергия", n: "die Energie"},
+            {kg: "Өз алдынча", ru: "Самостоятельно", n: "selbst"},
+            {kg: "Алмаштыруу", ru: "Менять", n: "wechseln"},
+            {kg: "Шып", ru: "Потолок", n: "die Decke"},
+            {kg: "Ыраазычылык", ru: "Благодарность", n: "der Dank"},
+            {kg: "Эч нерсе", ru: "Ничего", n: "nichts"},
+            {kg: "Ручка", ru: "Ручка", n: "der Kugelschreiber"},
+            {kg: "Кулпу", ru: "Замок", n: "das Schloss"},
+            {kg: "Мышык", ru: "Кошка", n: "die Katze"},
+            {kg: "Таштанды", ru: "Мусор", n: "der Müll"},
+            {kg: "Келишим", ru: "Договор", n: "der Vertrag"},
+            {kg: "Лифт", ru: "Лифт", n: "der Aufzug"}
         ];
+
+        function setLang(lang) {
+            selectedLang = lang;
+            document.getElementById('btn-kg').classList.toggle('active', lang === 'kg');
+            document.getElementById('btn-ru').classList.toggle('active', lang === 'ru');
+            document.getElementById('team-title').innerText = lang === 'kg' ? "Топту тандап кир:" : "Выберите команду:";
+        }
 
         function joinTeam(team) {
             myTeam = team;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-ui').style.display = 'block';
-            document.getElementById('team-info').innerText = team === 1 ? "Сиз КӨК топтосуз" : "Сиз КЫЗЫЛ топтосуз";
             nextWord();
         }
 
         function nextWord() {
             currentWordIndex = Math.floor(Math.random() * words.length);
-            document.getElementById("question").innerText = "Кыргызча: " + words[currentWordIndex].k;
+            document.getElementById("question").innerText = selectedLang === 'kg' ? words[currentWordIndex].kg : words[currentWordIndex].ru;
+            document.getElementById("answer").value = "";
+            document.getElementById("answer").focus();
         }
 
         function check() {
@@ -95,32 +125,47 @@
             let correct = words[currentWordIndex].n.toLowerCase();
             let correctSimple = correct.replace("die ", "").replace("der ", "").replace("das ", "");
 
-            if(val === correct || val === correctSimple) {
-                db.once('value').then(snap => {
-                    let data = snap.val() || {score1: 0, score2: 0, pos: 0};
-                    if(myTeam === 1) { data.score1++; data.pos -= 35; }
-                    else { data.score2++; data.pos += 35; }
-                    db.set(data);
-                });
-                document.getElementById("answer").value = "";
+            db.once('value').then(snap => {
+                let data = snap.val() || {pos: 0, s1_c: 0, s1_w: 0, s2_c: 0, s2_w: 0};
+                
+                if(val === correct || val === correctSimple) {
+                    // Туура болсо
+                    if(myTeam === 1) { data.s1_c++; data.pos -= 40; animatePull('player1'); } 
+                    else { data.s2_c++; data.pos += 40; animatePull('player2'); }
+                } else {
+                    // Ката болсо - өтүп кетет, бирок упай базага жазылат
+                    if(myTeam === 1) { data.s1_w++; } else { data.s2_w++; }
+                    alert((selectedLang === 'kg' ? "Ката! Жообу: " : "Ошибка! Ответ: ") + words[currentWordIndex].n);
+                }
+                db.set(data);
                 nextWord();
-            } else {
-                alert("Ката! Туура жооп: " + words[currentWordIndex].n);
-            }
+            });
         }
 
-        // БАЗАНЫ ТЫНБАЙ КӨЗӨМӨЛДӨӨ
+        function animatePull(id) {
+            let el = document.getElementById(id);
+            el.classList.add('pull-anim');
+            setTimeout(() => el.classList.remove('pull-anim'), 400);
+        }
+
         db.on('value', (snap) => {
             const data = snap.val();
             if(data) {
                 document.getElementById('rope-group').style.transform = `translateX(${data.pos}px)`;
-                document.getElementById('s1').innerText = data.score1;
-                document.getElementById('s2').innerText = data.score2;
+                document.getElementById('s1-correct').innerText = data.s1_c || 0;
+                document.getElementById('s1-wrong').innerText = data.s1_w || 0;
+                document.getElementById('s2-correct').innerText = data.s2_c || 0;
+                document.getElementById('s2-wrong').innerText = data.s2_w || 0;
 
-                if(data.score1 >= 10) { alert("КӨК ТОП ЖЕҢДИ! 🔥"); db.set({score1:0, score2:0, pos:0}); }
-                if(data.score2 >= 10) { alert("КЫЗЫЛ ТОП ЖЕҢДИ! 🔥"); db.set({score1:0, score2:0, pos:0}); }
+                // Жеңиш шарты (мисалы, 10 туура жооп)
+                if(data.s1_c >= 10) { alert("КӨК ТОП ЖЕҢДИ!"); resetGame(); }
+                if(data.s2_c >= 10) { alert("КЫЗЫЛ ТОП ЖЕҢДИ!"); resetGame(); }
             }
         });
+
+        function resetGame() {
+            db.set({pos: 0, s1_c: 0, s1_w: 0, s2_c: 0, s2_w: 0});
+        }
     </script>
 </body>
 </html>

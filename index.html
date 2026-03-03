@@ -12,13 +12,15 @@
         .online-count { background: #27ae60; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; display: inline-block; margin-bottom: 10px; font-weight: bold; }
         .setup-screen { background: white; padding: 30px; border-radius: 20px; max-width: 400px; margin: 20px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .battle-field { display: flex; justify-content: space-around; align-items: center; height: 160px; background: white; border-radius: 15px; margin: 20px 0; position: relative; overflow: hidden; border: 2px solid #ddd; }
-        .rope { width: 100%; height: 6px; background: #8b4513; position: absolute; z-index: 1; }
-        .character { font-size: 60px; position: absolute; z-index: 2; top: 25px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        #player1 { left: 15%; } #player2 { right: 15%; }
+        .rope { width: 100%; height: 6px; background: #8b4513; position: absolute; z-index: 1; top: 50%; left: 0; right: 0; }
+        /* Аркандын тобу (смайликтер) */
+        #rope-group { position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; transition: 0.5s ease-out; z-index: 2; }
+        .character { font-size: 60px; position: absolute; }
+        #player1 { left: 20%; } #player2 { right: 20%; }
         .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         input { width: 85%; padding: 15px; font-size: 22px; border-radius: 10px; border: none; margin-top: 15px; text-align: center; outline: none; }
         .btn-main { width: 95%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 10px; font-size: 22px; margin-top: 20px; cursor: pointer; font-weight: bold; }
-        .stat-box { display: flex; justify-content: space-around; background: #fff; padding: 10px; border-radius: 10px; margin-top: 15px; font-size: 14px; border: 1px solid #ddd; }
+        .stat-box { display: flex; justify-content: space-around; background: #fff; padding: 10px; border-radius: 10px; margin-top: 15px; font-size: 18px; border: 1px solid #ddd; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -38,7 +40,7 @@
     <div id="game-ui" style="display:none;">
         <div class="battle-field">
             <div class="rope"></div>
-            <div id="rope-group" style="position: absolute; width: 100%; transition: 0.5s;">
+            <div id="rope-group">
                 <div id="player1" class="character">🧑🏻‍💼</div>
                 <div id="player2" class="character">👩🏻‍💼</div>
             </div>
@@ -49,13 +51,12 @@
             <button class="btn-main" onclick="check()">GO!</button>
         </div>
         <div class="stat-box">
-            <div style="color:var(--blue)">Көк: <span id="s1">0</span></div>
-            <div style="color:var(--red)">Кызыл: <span id="s2">0</span></div>
+            <div style="color:var(--blue)">Көк: <span id="s1_val">0</span></div>
+            <div style="color:var(--red)">Кызыл: <span id="s2_val">0</span></div>
         </div>
     </div>
 
     <script>
-        // Сиздин базаңыздын чыныгы дареги (Скриншоттон алынды)
         const firebaseConfig = {
             databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" 
         };
@@ -63,7 +64,6 @@
         const db = firebase.database().ref('game_state');
         const presenceRef = firebase.database().ref('online_users');
 
-        // AI Үнү
         function speak(text) {
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = 'de-DE'; 
@@ -71,12 +71,11 @@
             window.speechSynthesis.speak(utter);
         }
 
-        // Онлайн башкаруу
+        // Онлайн санагыч
         const myUserRef = presenceRef.push(true);
         myUserRef.onDisconnect().remove();
         presenceRef.on('value', snap => {
-            const count = snap.numChildren();
-            document.getElementById('user-count').innerText = count > 0 ? count : 0;
+            document.getElementById('user-count').innerText = snap.numChildren() || 0;
         });
 
         let myTeam = 0;
@@ -116,32 +115,34 @@
                 let data = snap.val() || {pos: 0, s1: 0, s2: 0};
                 
                 if(val === correct) {
-                    speak("Richtig! " + correct);
-                    if(myTeam === 1) { data.s1++; data.pos -= 40; } 
-                    else { data.s2++; data.pos += 40; }
-                    
-                    // Базага жазып бүткөндө гана кийинкиге өтөт
-                    db.set(data).then(() => {
-                        nextWord();
-                    });
+                    speak("Richtig!");
+                    if(myTeam === 1) { 
+                        data.s1 = (data.s1 || 0) + 1; 
+                        data.pos = (data.pos || 0) - 40; 
+                    } else { 
+                        data.s2 = (data.s2 || 0) + 1; 
+                        data.pos = (data.pos || 0) + 40; 
+                    }
+                    db.set(data).then(() => nextWord());
                 } else {
                     speak("Falsch!");
-                    alert("AI Жардамчы: Туура жооп - " + words[currentWordIndex].n);
-                    nextWord(); // Ката болсо дароо кийинки суроого өтөт
+                    alert("Ката! Туура жооп: " + words[currentWordIndex].n);
+                    nextWord();
                 }
-            }).catch(err => {
-                console.error("Firebase катасы:", err);
-                nextWord(); // Ката болсо да оюн токтобойт
             });
         }
 
-        // Базадагы өзгөрүүнү байкоо (экинчи оюнчу үчүн)
+        // БАЗАДАН МААЛЫМАТ КЕЛГЕНДЕ ЭКРАНДЫ ЖАҢЫРТУУ
         db.on('value', snap => {
             const data = snap.val();
             if(data) {
-                document.getElementById('rope-group').style.transform = `translateX(${data.pos}px)`;
-                document.getElementById('s1').innerText = data.s1 || 0;
-                document.getElementById('s2').innerText = data.s2 || 0;
+                // Арканды (смайликтерди) жылдыруу
+                const position = data.pos || 0;
+                document.getElementById('rope-group').style.transform = `translateX(${position}px)`;
+                
+                // Упайларды жаңыртуу
+                document.getElementById('s1_val').innerText = data.s1 || 0;
+                document.getElementById('s2_val').innerText = data.s2 || 0;
             }
         });
     </script>

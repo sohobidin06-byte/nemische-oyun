@@ -16,7 +16,7 @@
         .character { font-size: 60px; position: absolute; z-index: 2; top: 25px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         #player1 { left: 15%; } #player2 { right: 15%; }
         .pull-anim { animation: pull 0.4s ease-in-out; }
-        @keyframes pull { 0% { transform: scale(1); } 50% { transform: scale(1.2) rotate(10deg); } 100% { transform: scale(1); } }
+        @keyframes pull { 0% { transform: scale(1); } 50% { transform: scale(1.3) rotate(15deg); } 100% { transform: scale(1); } }
         .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         input { width: 85%; padding: 15px; font-size: 22px; border-radius: 10px; border: none; margin-top: 15px; text-align: center; outline: none; }
         .btn-main { width: 95%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 10px; font-size: 22px; margin-top: 20px; cursor: pointer; font-weight: bold; }
@@ -28,7 +28,7 @@
 </head>
 <body>
 
-    <div class="online-count">👥 Онлайн: <span id="user-count">0</span></div>
+    <div class="online-count">👥 Онлайн: <span id="user-count">...</span></div>
 
     <div id="lobby" class="setup-screen">
         <h3>Тилди тандаңыз / Выберите язык:</h3>
@@ -36,14 +36,14 @@
         <button id="btn-ru" class="lang-btn" onclick="setLang('ru')">Русский</button>
         <hr style="margin: 20px 0; border: 0.5px solid #eee;">
         <h3 id="team-title">Топту тандап кир:</h3>
-        <button class="team-btn" style="background:var(--blue)" onclick="joinTeam(1)">Сол топ (Көк)</button>
-        <button class="team-btn" style="background:var(--red)" onclick="joinTeam(2)">Оң топ (Кызыл)</button>
+        <button class="team-btn" style="background:var(--blue)" onclick="joinTeam(1)">Көк Топ (Сол)</button>
+        <button class="team-btn" style="background:var(--red)" onclick="joinTeam(2)">Кызыл Топ (Оң)</button>
     </div>
 
     <div id="game-ui" style="display:none;">
-        <div style="display:flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
-            <span style="color:var(--blue)">Көк Топ</span>
-            <span style="color:var(--red)">Кызыл Топ</span>
+        <div style="display:flex; justify-content: space-between; font-weight: bold; padding: 0 10px;">
+            <span style="color:var(--blue)">Көк</span>
+            <span style="color:var(--red)">Кызыл</span>
         </div>
         <div class="battle-field">
             <div class="rope"></div>
@@ -55,7 +55,7 @@
         <div class="quiz-card">
             <h2 id="question">Сөз...</h2>
             <input type="text" id="answer" placeholder="..." autocomplete="off">
-            <button class="btn-main" onclick="check()" id="go-btn">GO!</button>
+            <button class="btn-main" onclick="check()">GO!</button>
         </div>
         <div class="stat-box">
             <div style="color:var(--blue)">Туура: <span id="s1-correct">0</span> | Ката: <span id="s1-wrong">0</span></div>
@@ -64,7 +64,7 @@
     </div>
 
     <script>
-        // FIREBASE ШИЛТЕМЕСИН ТЕКШЕРИҢИЗ!
+        // Сиздин шилтемеңиз кошулду
         const firebaseConfig = {
             databaseURL: "https://germangame-b5626-default-rtdb.europe-west1.firebasedatabase.app/" 
         };
@@ -72,9 +72,9 @@
         const db = firebase.database().ref('game_state');
         const presenceRef = firebase.database().ref('online_users');
 
+        // Онлайн санагыч
         const myUserRef = presenceRef.push(true);
         myUserRef.onDisconnect().remove();
-
         presenceRef.on('value', (snap) => {
             document.getElementById('user-count').innerText = snap.numChildren();
         });
@@ -83,7 +83,6 @@
         let selectedLang = 'kg';
         let currentWordIndex = 0;
 
-        // АРТИКЛДЕР АЛЫНЫП ТАШТАЛДЫ
         const words = [
             {kg: "Энергия", ru: "Энергия", n: "Energie"},
             {kg: "Өз алдынча", ru: "Самостоятельно", n: "selbst"},
@@ -96,9 +95,7 @@
             {kg: "Мышык", ru: "Кошка", n: "Katze"},
             {kg: "Таштанды", ru: "Мусор", n: "Müll"},
             {kg: "Келишим", ru: "Договор", n: "Vertrag"},
-            {kg: "Лифт", ru: "Лифт", n: "Aufzug"},
-            {kg: "Почта кутусу", ru: "Почтовый ящик", n: "Briefkasten"},
-            {kg: "Өсүмдүк", ru: "Растение", n: "Pflanze"}
+            {kg: "Лифт", ru: "Лифт", n: "Aufzug"}
         ];
 
         function setLang(lang) {
@@ -154,8 +151,8 @@
                 document.getElementById('s1-wrong').innerText = data.s1_w || 0;
                 document.getElementById('s2-correct').innerText = data.s2_c || 0;
                 document.getElementById('s2-wrong').innerText = data.s2_w || 0;
-                if(data.s1_c >= 10) { alert("КӨК ТОП ЖЕҢДИ!"); resetGame(); }
-                if(data.s2_c >= 10) { alert("КЫЗЫЛ ТОП ЖЕҢДИ!"); resetGame(); }
+                if(data.s1_c >= 10) { alert("КӨК ТОП ЖЕҢДИ! 🔥"); resetGame(); }
+                if(data.s2_c >= 10) { alert("КЫЗЫЛ ТОП ЖЕҢДИ! 🔥"); resetGame(); }
             }
         });
 

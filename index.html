@@ -9,27 +9,17 @@
     <style>
         :root { --blue: #3498db; --red: #e74c3c; --navy: #1a237e; }
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f4f7f6; margin: 0; padding: 15px; }
-        
-        /* Оюнчулардын саны үчүн стиль */
         .online-count { background: #27ae60; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; display: inline-block; margin-bottom: 10px; font-weight: bold; }
-        
         .setup-screen { background: white; padding: 30px; border-radius: 20px; max-width: 400px; margin: 20px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .battle-field { display: flex; justify-content: space-around; align-items: center; height: 160px; background: white; border-radius: 15px; margin: 20px 0; position: relative; overflow: hidden; border: 2px solid #ddd; }
         .rope { width: 100%; height: 6px; background: #8b4513; position: absolute; z-index: 1; }
         .character { font-size: 60px; position: absolute; z-index: 2; top: 25px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         #player1 { left: 15%; } #player2 { right: 15%; }
-        
         .pull-anim { animation: pull 0.4s ease-in-out; }
-        @keyframes pull {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2) rotate(10deg); }
-            100% { transform: scale(1); }
-        }
-
+        @keyframes pull { 0% { transform: scale(1); } 50% { transform: scale(1.2) rotate(10deg); } 100% { transform: scale(1); } }
         .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         input { width: 85%; padding: 15px; font-size: 22px; border-radius: 10px; border: none; margin-top: 15px; text-align: center; outline: none; }
         .btn-main { width: 95%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 10px; font-size: 22px; margin-top: 20px; cursor: pointer; font-weight: bold; }
-        
         .stat-box { display: flex; justify-content: space-around; background: #fff; padding: 10px; border-radius: 10px; margin-top: 15px; font-size: 14px; border: 1px solid #ddd; }
         .lang-btn { padding: 12px; margin: 5px; border: 2px solid var(--navy); border-radius: 10px; background: white; color: var(--navy); font-weight: bold; cursor: pointer; width: 45%; }
         .lang-btn.active { background: var(--navy); color: white; }
@@ -55,21 +45,18 @@
             <span style="color:var(--blue)">Көк Топ</span>
             <span style="color:var(--red)">Кызыл Топ</span>
         </div>
-        
         <div class="battle-field">
             <div class="rope"></div>
             <div id="rope-group" style="position: absolute; width: 100%; transition: 0.5s;">
-                <div id="player1" class="character">🧑🏻‍💼</div>
-                <div id="player2" class="character">👩🏻‍💼</div>
+                <div id="player1" class="character">👲</div>
+                <div id="player2" class="character">🤖</div>
             </div>
         </div>
-
         <div class="quiz-card">
             <h2 id="question">Сөз...</h2>
             <input type="text" id="answer" placeholder="..." autocomplete="off">
             <button class="btn-main" onclick="check()" id="go-btn">GO!</button>
         </div>
-
         <div class="stat-box">
             <div style="color:var(--blue)">Туура: <span id="s1-correct">0</span> | Ката: <span id="s1-wrong">0</span></div>
             <div style="color:var(--red)">Туура: <span id="s2-correct">0</span> | Ката: <span id="s2-wrong">0</span></div>
@@ -77,16 +64,16 @@
     </div>
 
     <script>
+        // FIREBASE ШИЛТЕМЕСИН ТЕКШЕРИҢИЗ!
         const firebaseConfig = {
-            databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" 
+            databaseURL: "https://germangame-b5626-default-rtdb.europe-west1.firebasedatabase.app/" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('game_state');
         const presenceRef = firebase.database().ref('online_users');
 
-        // --- ОНЛАЙН САНАГЫЧТЫ БАШКАРУУ ---
         const myUserRef = presenceRef.push(true);
-        myUserRef.onDisconnect().remove(); // Чыгып кеткенде өчүрүү
+        myUserRef.onDisconnect().remove();
 
         presenceRef.on('value', (snap) => {
             document.getElementById('user-count').innerText = snap.numChildren();
@@ -96,19 +83,22 @@
         let selectedLang = 'kg';
         let currentWordIndex = 0;
 
+        // АРТИКЛДЕР АЛЫНЫП ТАШТАЛДЫ
         const words = [
-            {kg: "Энергия", ru: "Энергия", n: "die Energie"},
+            {kg: "Энергия", ru: "Энергия", n: "Energie"},
             {kg: "Өз алдынча", ru: "Самостоятельно", n: "selbst"},
             {kg: "Алмаштыруу", ru: "Менять", n: "wechseln"},
-            {kg: "Шып", ru: "Потолок", n: "die Decke"},
-            {kg: "Ыраазычылык", ru: "Благодарность", n: "der Dank"},
+            {kg: "Шып", ru: "Потолок", n: "Decke"},
+            {kg: "Ыраазычылык", ru: "Благодарность", n: "Dank"},
             {kg: "Эч нерсе", ru: "Ничего", n: "nichts"},
-            {kg: "Ручка", ru: "Ручка", n: "der Kugelschreiber"},
-            {kg: "Кулпу", ru: "Замок", n: "das Schloss"},
-            {kg: "Мышык", ru: "Кошка", n: "die Katze"},
-            {kg: "Таштанды", ru: "Мусор", n: "der Müll"},
-            {kg: "Келишим", ru: "Договор", n: "der Vertrag"},
-            {kg: "Лифт", ru: "Лифт", n: "der Aufzug"}
+            {kg: "Ручка", ru: "Ручка", n: "Kugelschreiber"},
+            {kg: "Кулпу", ru: "Замок", n: "Schloss"},
+            {kg: "Мышык", ru: "Кошка", n: "Katze"},
+            {kg: "Таштанды", ru: "Мусор", n: "Müll"},
+            {kg: "Келишим", ru: "Договор", n: "Vertrag"},
+            {kg: "Лифт", ru: "Лифт", n: "Aufzug"},
+            {kg: "Почта кутусу", ru: "Почтовый ящик", n: "Briefkasten"},
+            {kg: "Өсүмдүк", ru: "Растение", n: "Pflanze"}
         ];
 
         function setLang(lang) {
@@ -135,12 +125,10 @@
         function check() {
             let val = document.getElementById("answer").value.trim().toLowerCase();
             let correct = words[currentWordIndex].n.toLowerCase();
-            let correctSimple = correct.replace("die ", "").replace("der ", "").replace("das ", "");
 
             db.once('value').then(snap => {
                 let data = snap.val() || {pos: 0, s1_c: 0, s1_w: 0, s2_c: 0, s2_w: 0};
-                
-                if(val === correct || val === correctSimple) {
+                if(val === correct) {
                     if(myTeam === 1) { data.s1_c++; data.pos -= 40; animatePull('player1'); } 
                     else { data.s2_c++; data.pos += 40; animatePull('player2'); }
                 } else {
@@ -166,15 +154,12 @@
                 document.getElementById('s1-wrong').innerText = data.s1_w || 0;
                 document.getElementById('s2-correct').innerText = data.s2_c || 0;
                 document.getElementById('s2-wrong').innerText = data.s2_w || 0;
-
                 if(data.s1_c >= 10) { alert("КӨК ТОП ЖЕҢДИ!"); resetGame(); }
                 if(data.s2_c >= 10) { alert("КЫЗЫЛ ТОП ЖЕҢДИ!"); resetGame(); }
             }
         });
 
-        function resetGame() {
-            db.set({pos: 0, s1_c: 0, s1_w: 0, s2_c: 0, s2_w: 0});
-        }
+        function resetGame() { db.set({pos: 0, s1_c: 0, s1_w: 0, s2_c: 0, s2_w: 0}); }
     </script>
 </body>
 </html>

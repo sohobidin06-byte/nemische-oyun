@@ -12,11 +12,8 @@
         body { 
             font-family: 'Segoe UI', sans-serif; 
             text-align: center; 
-            /* СИЗ ТАНДАГАН СЕПИЛДИН СҮРӨТҮ */
             background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
-                        url('https://lh3.googleusercontent.com/proxy/2E1DqXhP79FmH_0e88jNq56jQ-1h0Y4n7Y8u2K1U6Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q'); 
-            /* ЭСКЕРТҮҮ: Жогорудагы шилтеме убактылуу болушу мүмкүн. 
-               Эгер сүрөт көрүнбөй калса, өзүңүздөгү файлдын түз шилтемесин коюңуз. */
+                        url('https://images.unsplash.com/photo-1467269204594-9661b134dd2b?q=80&w=2070&auto=format&fit=crop'); 
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -26,7 +23,6 @@
             min-height: 100vh;
         }
 
-        /* Тунук "Glass" эффекттери */
         .screen { 
             display: none; 
             background: rgba(255, 255, 255, 0.85); 
@@ -103,7 +99,7 @@
 
     <div id="screen-game-container" style="display:none;">
         <div class="game-timer-ui">⏳ <span id="main-clock">06:00</span></div>
-        <div style="color:white; margin-bottom:10px; font-weight:bold;">Сөздөр: <span id="total-words-display">0</span> | Таймер: <span id="q-timer">10</span>с</div>
+        <div style="color:white; margin-bottom:10px; font-weight:bold;">Сөздөр: <span id="total-words-display">0</span> | Таймер: <span id="q-timer">20</span>с</div>
         
         <div class="screen" style="display:block; margin-top:0;">
             <div class="battle-field">
@@ -136,18 +132,16 @@
     </div>
 
     <script>
-        // FIREBASE КОНФИГУРАЦИЯСЫ (Сиздин базаңыз)
         const firebaseConfig = { databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
 
         let db, myTeam, roomPath;
         let qTimerInterval;
-        let timeLeft = 10;
+        let timeLeft = 20; // 10дон 20га өзгөртүлдү
         let gameTime = 360; 
         let currentWordIndex = -1;
         let selectedLang = 'kg';
 
-        // СӨЗДӨР ТИЗМЕСИ
         const words = [
             {kg: "Мышык", ru: "Кошка", n: "Katze"}, {kg: "Энергия", ru: "Энергия", n: "Energie"},
             {kg: "Шып", ru: "Потолок", n: "Decke"}, {kg: "Таштанды", ru: "Мусор", n: "Müll"},
@@ -157,7 +151,6 @@
             {kg: "Үй", ru: "Дом", n: "Haus"}, {kg: "Нан", ru: "Хлеб", n: "Brot"}
         ];
 
-        // URL аркылуу бөлмөнү текшерүү
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const roomFromUrl = urlParams.get('room');
@@ -214,7 +207,6 @@
                 document.getElementById('s1').innerText = data.s1 || 0;
                 document.getElementById('s2').innerText = data.s2 || 0;
                 document.getElementById('total-words-display').innerText = data.totalWords || 0;
-                // Арканды тартуу анимациясы
                 document.getElementById('rope-group').style.transform = `translateX(${data.pos}px)`;
                 
                 let elapsed = Math.floor((Date.now() - data.startTime) / 1000);
@@ -227,7 +219,7 @@
 
         function startQuestionTimer() {
             clearInterval(qTimerInterval);
-            timeLeft = 10;
+            timeLeft = 20; // Жаңы сөз чыкканда таймерди 20га орнотуу
             document.getElementById('q-timer').innerText = timeLeft;
             qTimerInterval = setInterval(() => {
                 timeLeft--;
@@ -258,7 +250,6 @@
                 speak("Richtig!");
                 db.once('value').then(snap => {
                     let data = snap.val();
-                    // Арканды 40 пикселге тартуу
                     if(myTeam === 1) { data.s1++; data.pos -= 40; }
                     else { data.s2++; data.pos += 40; }
                     db.update(data);

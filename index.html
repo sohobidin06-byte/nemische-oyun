@@ -13,7 +13,6 @@
         .setup-screen { background: white; padding: 30px; border-radius: 20px; max-width: 400px; margin: 20px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .battle-field { display: flex; justify-content: space-around; align-items: center; height: 160px; background: white; border-radius: 15px; margin: 20px 0; position: relative; overflow: hidden; border: 2px solid #ddd; }
         .rope { width: 100%; height: 6px; background: #8b4513; position: absolute; z-index: 1; top: 50%; left: 0; right: 0; }
-        /* Аркандын тобу (смайликтер) */
         #rope-group { position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; transition: 0.5s ease-out; z-index: 2; }
         .character { font-size: 60px; position: absolute; }
         #player1 { left: 20%; } #player2 { right: 20%; }
@@ -71,7 +70,6 @@
             window.speechSynthesis.speak(utter);
         }
 
-        // Онлайн санагыч
         const myUserRef = presenceRef.push(true);
         myUserRef.onDisconnect().remove();
         presenceRef.on('value', snap => {
@@ -80,7 +78,7 @@
 
         let myTeam = 0;
         let selectedLang = 'kg';
-        let currentWordIndex = 0;
+        let currentWordIndex = -1; // Башында -1
 
         const words = [
             {kg: "Мышык", ru: "Кошка", n: "Katze"},
@@ -100,8 +98,14 @@
             nextWord();
         }
 
+        // БУЛ ЖЕРДЕ ӨЗГӨРҮҮ: Жаңы сөз эскисине окшош болбошу керек
         function nextWord() {
-            currentWordIndex = Math.floor(Math.random() * words.length);
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * words.length);
+            } while (newIndex === currentWordIndex); // Эгер эски индекс болсо, кайра танда
+            
+            currentWordIndex = newIndex;
             document.getElementById("question").innerText = selectedLang === 'kg' ? words[currentWordIndex].kg : words[currentWordIndex].ru;
             document.getElementById("answer").value = "";
             document.getElementById("answer").focus();
@@ -132,15 +136,11 @@
             });
         }
 
-        // БАЗАДАН МААЛЫМАТ КЕЛГЕНДЕ ЭКРАНДЫ ЖАҢЫРТУУ
         db.on('value', snap => {
             const data = snap.val();
             if(data) {
-                // Арканды (смайликтерди) жылдыруу
                 const position = data.pos || 0;
                 document.getElementById('rope-group').style.transform = `translateX(${position}px)`;
-                
-                // Упайларды жаңыртуу
                 document.getElementById('s1_val').innerText = data.s1 || 0;
                 document.getElementById('s2_val').innerText = data.s2 || 0;
             }

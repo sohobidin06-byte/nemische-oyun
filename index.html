@@ -12,89 +12,111 @@
         body { 
             font-family: 'Segoe UI', sans-serif; 
             text-align: center; 
-            /* СИЗ ТАНДАГАН СҮРӨТ УШУЛ ЖЕРДЕ */
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                        url('https://www.shutterstock.com/image-vector/deutsch-translation-german-learning-online-260nw-1897882375.jpg');
+            /* СИЗ ТАНДАГАН СЕПИЛДИН СҮРӨТҮ */
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                        url('https://lh3.googleusercontent.com/proxy/2E1DqXhP79FmH_0e88jNq56jQ-1h0Y4n7Y8u2K1U6Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q'); 
+            /* ЭСКЕРТҮҮ: Жогорудагы шилтеме убактылуу болушу мүмкүн. 
+               Эгер сүрөт көрүнбөй калса, өзүңүздөгү файлдын түз шилтемесин коюңуз. */
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             margin: 0; 
             padding: 10px; 
             color: #333;
+            min-height: 100vh;
         }
 
+        /* Тунук "Glass" эффекттери */
         .screen { 
             display: none; 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(15px);
             padding: 25px; 
-            border-radius: 25px; 
+            border-radius: 30px; 
             max-width: 400px; 
             margin: 20px auto; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         .active { display: block; }
         
-        input { width: 85%; padding: 12px; margin: 10px; border-radius: 12px; border: 1px solid #ddd; font-size: 18px; text-align: center; outline: none; }
+        input { 
+            width: 85%; padding: 12px; margin: 10px; border-radius: 15px; 
+            border: 1px solid #ccc; font-size: 18px; text-align: center; 
+            background: rgba(255,255,255,0.9);
+        }
         
-        button { padding: 12px 25px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin: 5px; transition: 0.3s; }
+        button { 
+            padding: 12px 25px; border-radius: 15px; border: none; 
+            cursor: pointer; font-weight: bold; font-size: 16px; 
+            margin: 5px; transition: 0.3s transform; 
+        }
         
-        .btn-blue { background: var(--blue); color: white; }
-        .btn-red { background: var(--red); color: white; }
+        button:active { transform: scale(0.95); }
         
-        .lang-btn { background: #eee; color: #333; width: 45%; }
+        .btn-blue { background: var(--blue); color: white; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
+        .btn-red { background: var(--red); color: white; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); }
+        
+        .lang-btn { background: #ddd; color: #333; width: 45%; }
         .lang-active { background: #4caf50; color: white; }
 
-        .battle-field { height: 130px; background: rgba(255,255,255,0.7); border-radius: 20px; margin: 15px 0; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.5); }
+        .battle-field { 
+            height: 120px; background: rgba(0,0,0,0.1); border-radius: 20px; 
+            margin: 15px 0; position: relative; overflow: hidden; 
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
         
-        #rope-group { position: absolute; width: 100%; transition: 0.5s; display: flex; justify-content: center; font-size: 55px; }
+        #rope-group { position: absolute; width: 100%; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; justify-content: center; font-size: 50px; }
 
-        .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        .game-timer { color: white; font-weight: bold; font-size: 22px; text-shadow: 2px 2px 5px rgba(0,0,0,0.8); margin-bottom: 5px; }
-        .word-count { color: #fff; font-size: 14px; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
-        .share-box { margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 10px; font-size: 13px; border: 1px dashed #4caf50; }
+        .game-timer-ui { color: white; font-weight: bold; font-size: 22px; text-shadow: 2px 2px 8px rgba(0,0,0,0.7); margin-bottom: 10px; }
+        .share-box { margin-top: 15px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 15px; font-size: 13px; border: 1px dashed #4caf50; color: #1b5e20; }
     </style>
 </head>
 <body>
 
     <div id="screen-login" class="screen active">
-        <h2 style="color:var(--navy)">Willkommen!</h2>
-        <p>Тилди тандаңыз:</p>
-        <button id="btn-kg" class="lang-btn lang-active" onclick="setLang('kg')">Кыргызча</button>
-        <button id="btn-ru" class="lang-btn" onclick="setLang('ru')">Русский</button>
-        <hr style="margin: 20px 0; opacity: 0.1;">
+        <h2 style="color:var(--navy); margin-top:0;">Willkommen! 🇩🇪</h2>
+        <p style="margin-bottom:5px;">Тилди тандаңыз:</p>
+        <div style="display:flex; justify-content: space-between;">
+            <button id="btn-kg" class="lang-btn lang-active" onclick="setLang('kg')">Кыргызча</button>
+            <button id="btn-ru" class="lang-btn" onclick="setLang('ru')">Русский</button>
+        </div>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
         
         <input type="text" id="user-name" placeholder="Атыңызды жазыңыз">
         <input type="text" id="room-id" placeholder="Бөлмө коду (мис: 123)">
         
         <div id="share-link-area" class="share-box" style="display:none;">
-            Бул кодду досторго жөнөтүңүз:<br>
-            <button onclick="copyShareLink()" style="background:#4caf50; color:white; font-size:12px; padding:5px 10px; margin-top:5px;">Шилтемени көчүрүү 🔗</button>
+            Бул бөлмөгө чакыруу шилтемеси:<br>
+            <button onclick="copyShareLink()" style="background:#4caf50; color:white; font-size:12px; padding:8px 15px; margin-top:8px;">Шилтемени көчүрүү 🔗</button>
         </div>
 
-        <br>
-        <button class="btn-blue" onclick="startApp(1)">Көк топко кир</button>
-        <button class="btn-red" onclick="startApp(2)">Кызыл топко кир</button>
+        <div style="margin-top:15px;">
+            <button class="btn-blue" style="width:100%; margin-bottom:10px;" onclick="startApp(1)">Көк топко кир (🟦)</button>
+            <button class="btn-red" style="width:100%;" onclick="startApp(2)">Кызыл топко кир (🟥)</button>
+        </div>
     </div>
 
-    <div id="screen-game" class="screen-ui" style="display:none;">
-        <div class="game-timer">⏳ <span id="main-clock">06:00</span></div>
-        <div class="word-count">Сөздөр: <b id="total-words-display">0</b> | Калды: <b id="q-timer">10</b>с</div>
+    <div id="screen-game-container" style="display:none;">
+        <div class="game-timer-ui">⏳ <span id="main-clock">06:00</span></div>
+        <div style="color:white; margin-bottom:10px; font-weight:bold;">Сөздөр: <span id="total-words-display">0</span> | Таймер: <span id="q-timer">10</span>с</div>
         
-        <div class="screen" class="active" style="display:block; margin-top:0;">
+        <div class="screen" style="display:block; margin-top:0;">
             <div class="battle-field">
                 <div id="rope-group">🧑🏻‍💼 🟦—🟥 👩🏻‍💼</div>
             </div>
 
             <div class="quiz-card">
-                <h3 id="question" style="font-size: 24px;">Жүктөлүүдө...</h3>
-                <input type="text" id="answer" placeholder="Жоопту жаз..." autocomplete="off">
-                <button style="background:#4caf50; color:white; width:90%; font-size:20px;" onclick="check()">GO!</button>
+                <h3 id="question" style="font-size: 26px; margin: 0 0 15px 0;">...</h3>
+                <input type="text" id="answer" placeholder="Немисчесин жаз..." autocomplete="off">
+                <button style="background:#4caf50; color:white; width:100%; font-size:20px; margin-top:10px;" onclick="check()">Жөнөтүү!</button>
             </div>
 
-            <div style="display:flex; justify-content: space-around; margin-top:15px; font-weight:bold; font-size:18px;">
+            <div style="display:flex; justify-content: space-around; margin-top:20px; font-weight:bold; font-size:20px;">
                 <div style="color:var(--blue)">Көк: <span id="s1">0</span></div>
                 <div style="color:var(--red)">Кызыл: <span id="s2">0</span></div>
             </div>
@@ -102,18 +124,19 @@
     </div>
 
     <div id="screen-result" class="screen">
-        <h2 style="color:var(--navy)">Оюн бүттү!</h2>
-        <h1 id="winner-text" style="font-size:28px">---</h1>
-        <div style="background:#f9f9f9; padding:15px; border-radius:15px; margin:20px 0;">
-            <p>Жалпы көрсөтүлгөн сөздөр: <b id="final-total">0</b></p>
-            <hr>
-            <p style="color:var(--blue)">Көк топ (туура): <b id="final-s1">0</b></p>
-            <p style="color:var(--red)">Кызыл топ (туура): <b id="final-s2">0</b></p>
+        <h2 style="color:var(--navy)">Оюн аяктады!</h2>
+        <h1 id="winner-text" style="font-size:32px; margin:10px 0;">---</h1>
+        <div style="background:rgba(0,0,0,0.05); padding:20px; border-radius:20px; margin:20px 0;">
+            <p style="font-size:18px;">Жалпы көрсөтүлгөн сөздөр: <b id="final-total">0</b></p>
+            <hr style="border:0; border-top:1px solid #ccc;">
+            <p style="color:var(--blue); font-size:20px;">Көк топ: <b id="final-s1">0</b></p>
+            <p style="color:var(--red); font-size:20px;">Кызыл топ: <b id="final-s2">0</b></p>
         </div>
-        <button class="btn-blue" onclick="location.reload()" style="width:100%">Кайра баштоо</button>
+        <button class="btn-blue" onclick="location.reload()" style="width:100%; font-size:18px;">Кайра баштоо</button>
     </div>
 
     <script>
+        // FIREBASE КОНФИГУРАЦИЯСЫ (Сиздин базаңыз)
         const firebaseConfig = { databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
 
@@ -124,14 +147,17 @@
         let currentWordIndex = -1;
         let selectedLang = 'kg';
 
+        // СӨЗДӨР ТИЗМЕСИ
         const words = [
             {kg: "Мышык", ru: "Кошка", n: "Katze"}, {kg: "Энергия", ru: "Энергия", n: "Energie"},
             {kg: "Шып", ru: "Потолок", n: "Decke"}, {kg: "Таштанды", ru: "Мусор", n: "Müll"},
             {kg: "Келишим", ru: "Договор", n: "Vertrag"}, {kg: "Китеп", ru: "Книга", n: "Buch"},
             {kg: "Мектеп", ru: "Школа", n: "Schule"}, {kg: "Убакыт", ru: "Время", n: "Zeit"},
-            {kg: "Алма", ru: "Яблоко", n: "Apfel"}, {kg: "Суу", ru: "Вода", n: "Wasser"}
+            {kg: "Алма", ru: "Яблоко", n: "Apfel"}, {kg: "Суу", ru: "Вода", n: "Wasser"},
+            {kg: "Үй", ru: "Дом", n: "Haus"}, {kg: "Нан", ru: "Хлеб", n: "Brot"}
         ];
 
+        // URL аркылуу бөлмөнү текшерүү
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const roomFromUrl = urlParams.get('room');
@@ -160,18 +186,18 @@
         function speak(text) {
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = 'de-DE';
-            utter.rate = 0.9;
+            utter.rate = 0.85;
             window.speechSynthesis.speak(utter);
         }
 
         function startApp(team) {
             let user = document.getElementById('user-name').value.trim();
             roomPath = document.getElementById('room-id').value.trim();
-            if(!user || !roomPath) return alert("Атты жана кодду жазыңыз!");
+            if(!user || !roomPath) return alert("Атыңызды жана бөлмө кодун жазыңыз!");
             myTeam = team;
             db = firebase.database().ref('rooms/' + roomPath);
             document.getElementById('screen-login').classList.remove('active');
-            document.getElementById('screen-game').style.display = 'block';
+            document.getElementById('screen-game-container').style.display = 'block';
             initGame();
         }
 
@@ -188,6 +214,7 @@
                 document.getElementById('s1').innerText = data.s1 || 0;
                 document.getElementById('s2').innerText = data.s2 || 0;
                 document.getElementById('total-words-display').innerText = data.totalWords || 0;
+                // Арканды тартуу анимациясы
                 document.getElementById('rope-group').style.transform = `translateX(${data.pos}px)`;
                 
                 let elapsed = Math.floor((Date.now() - data.startTime) / 1000);
@@ -231,6 +258,7 @@
                 speak("Richtig!");
                 db.once('value').then(snap => {
                     let data = snap.val();
+                    // Арканды 40 пикселге тартуу
                     if(myTeam === 1) { data.s1++; data.pos -= 40; }
                     else { data.s2++; data.pos += 40; }
                     db.update(data);
@@ -252,12 +280,16 @@
         function endGame(data) {
             clearInterval(qTimerInterval);
             db.off();
-            document.getElementById('screen-game').style.display = 'none';
+            document.getElementById('screen-game-container').style.display = 'none';
             document.getElementById('screen-result').classList.add('active');
             document.getElementById('final-s1').innerText = data.s1;
             document.getElementById('final-s2').innerText = data.s2;
             document.getElementById('final-total').innerText = data.totalWords;
-            document.getElementById('winner-text').innerText = data.s1 > data.s2 ? "Көк топ жеңди! 🎉" : (data.s2 > data.s1 ? "Кызыл топ жеңди! 🎉" : "Тең чыгуу!");
+            
+            let resText = "Тең чыгуу! 🤝";
+            if(data.s1 > data.s2) resText = "Көк топ жеңди! 🎉";
+            if(data.s2 > data.s1) resText = "Кызыл топ жеңди! 🎉";
+            document.getElementById('winner-text').innerText = resText;
         }
     </script>
 </body>

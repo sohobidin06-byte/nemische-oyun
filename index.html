@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Немисче Жарыш</title>
+    <title>AI Немисче Online Жарыш</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --blue: #3498db; --red: #e74c3c; --navy: #1a237e; }
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f4f7f6; margin: 0; padding: 15px; }
         .online-count { background: #27ae60; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; display: inline-block; margin-bottom: 10px; font-weight: bold; }
+        .setup-screen { background: white; padding: 30px; border-radius: 20px; max-width: 400px; margin: 20px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .battle-field { display: flex; justify-content: space-around; align-items: center; height: 160px; background: white; border-radius: 15px; margin: 20px 0; position: relative; overflow: hidden; border: 2px solid #ddd; }
         .rope { width: 100%; height: 6px; background: #8b4513; position: absolute; z-index: 1; }
         .character { font-size: 60px; position: absolute; z-index: 2; top: 25px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -24,12 +25,12 @@
 
     <div class="online-count">👥 Онлайн: <span id="user-count">...</span></div>
 
-    <div id="lobby" style="background:white; padding:30px; border-radius:20px; max-width:400px; margin:20px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+    <div id="lobby" class="setup-screen">
         <h3>Тилди тандаңыз:</h3>
-        <button onclick="setLang('kg')" style="padding:10px; width:45%;">Кыргызча</button>
-        <button onclick="setLang('ru')" style="padding:10px; width:45%;">Русский</button>
+        <button onclick="setLang('kg')" style="padding:10px; width:45%; cursor:pointer;">Кыргызча</button>
+        <button onclick="setLang('ru')" style="padding:10px; width:45%; cursor:pointer;">Русский</button>
         <hr>
-        <h3>Топко кошул:</h3>
+        <h3>Топту тандап кир:</h3>
         <button onclick="joinTeam(1)" style="background:var(--blue); color:white; padding:15px; width:80%; border:none; border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">Көк Топ</button>
         <button onclick="joinTeam(2)" style="background:var(--red); color:white; padding:15px; width:80%; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Кызыл Топ</button>
     </div>
@@ -44,7 +45,7 @@
         </div>
         <div class="quiz-card">
             <h2 id="question">Жүктөлүүдө...</h2>
-            <input type="text" id="answer" placeholder="Жообун жаз..." autocomplete="off">
+            <input type="text" id="answer" placeholder="Жоопту жаз..." autocomplete="off">
             <button class="btn-main" onclick="check()">GO!</button>
         </div>
         <div class="stat-box">
@@ -54,7 +55,7 @@
     </div>
 
     <script>
-        // СКРИНШОТТОГУ ТУУРА ШИЛТЕМЕ КОШУЛДУ
+        // Сиздин базаңыздын чыныгы дареги (Скриншоттон алынды)
         const firebaseConfig = {
             databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" 
         };
@@ -74,14 +75,14 @@
         const myUserRef = presenceRef.push(true);
         myUserRef.onDisconnect().remove();
         presenceRef.on('value', snap => {
-            document.getElementById('user-count').innerText = snap.numChildren();
+            const count = snap.numChildren();
+            document.getElementById('user-count').innerText = count > 0 ? count : 0;
         });
 
         let myTeam = 0;
         let selectedLang = 'kg';
         let currentWordIndex = 0;
 
-        // Артиклдери жок таза сөздөр
         const words = [
             {kg: "Мышык", ru: "Кошка", n: "Katze"},
             {kg: "Энергия", ru: "Энергия", n: "Energie"},
@@ -104,6 +105,7 @@
             currentWordIndex = Math.floor(Math.random() * words.length);
             document.getElementById("question").innerText = selectedLang === 'kg' ? words[currentWordIndex].kg : words[currentWordIndex].ru;
             document.getElementById("answer").value = "";
+            document.getElementById("answer").focus();
         }
 
         function check() {
@@ -112,19 +114,28 @@
 
             db.once('value').then(snap => {
                 let data = snap.val() || {pos: 0, s1: 0, s2: 0};
+                
                 if(val === correct) {
-                    speak("Richtig! " + correct); // AI немисче сүйлөйт
+                    speak("Richtig! " + correct);
                     if(myTeam === 1) { data.s1++; data.pos -= 40; } 
                     else { data.s2++; data.pos += 40; }
-                    db.set(data);
+                    
+                    // Базага жазып бүткөндө гана кийинкиге өтөт
+                    db.set(data).then(() => {
+                        nextWord();
+                    });
                 } else {
-                    speak("Falsch!"); // AI ката дейт
+                    speak("Falsch!");
                     alert("AI Жардамчы: Туура жооп - " + words[currentWordIndex].n);
+                    nextWord(); // Ката болсо дароо кийинки суроого өтөт
                 }
-                nextWord();
+            }).catch(err => {
+                console.error("Firebase катасы:", err);
+                nextWord(); // Ката болсо да оюн токтобойт
             });
         }
 
+        // Базадагы өзгөрүүнү байкоо (экинчи оюнчу үчүн)
         db.on('value', snap => {
             const data = snap.val();
             if(data) {

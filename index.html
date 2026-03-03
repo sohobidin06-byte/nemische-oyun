@@ -43,7 +43,6 @@
             <button id="btn-kg" class="lang-btn lang-active" onclick="setLang('kg')">Кыргызча</button>
             <button id="btn-ru" class="lang-btn" onclick="setLang('ru')">Русский</button>
         </div>
-        <hr style="opacity:0.2">
         <input type="text" id="user-name" placeholder="Атыңызды жазыңыз">
         <input type="text" id="room-id" placeholder="Бөлмө коду (мис: 123)">
         
@@ -59,14 +58,14 @@
     </div>
 
     <div id="screen-game-container" style="display:none;">
-        <div class="game-timer-ui">⏳ <span id="main-clock">06:00</span></div>
-        <div style="color:white; font-weight:bold;">Сөздөр: <span id="total-words-display">0</span> | Таймер: <span id="q-timer">20</span>с</div>
+        <div class="game-timer-ui">⏳ Калган убакыт: <span id="main-clock">06:00</span></div>
+        <div style="color:white; font-weight:bold; margin-top:5px;">Сөздөр: <span id="total-words-display">0</span> | Сөзгө берилген убакыт: <span id="q-timer" style="color:#ffeb3b; font-size: 20px;">20</span>с</div>
         <div class="screen" style="display:block; margin-top:10px;">
             <div class="battle-field"><div id="rope-group">🧑🏻‍💼 🟦—🟥 👩🏻‍💼</div></div>
             <div class="quiz-card">
-                <h3 id="question" style="font-size: 26px;">...</h3>
+                <h3 id="question" style="font-size: 26px; margin-top: 5px;">...</h3>
                 <input type="text" id="answer" placeholder="Немисчесин жаз..." autocomplete="off">
-                <button style="background:#4caf50; color:white; width:100%; font-size:20px;" onclick="check()">GO!</button>
+                <button style="background:#4caf50; color:white; width:100%; font-size:20px;" onclick="check()">ЖӨНӨТҮҮ!</button>
             </div>
             <div style="display:flex; justify-content: space-around; margin-top:20px; font-weight:bold; font-size:20px;">
                 <div style="color:var(--blue)">Көк: <span id="s1">0</span></div>
@@ -86,7 +85,9 @@
         firebase.initializeApp(firebaseConfig);
 
         let db, myTeam, roomPath;
-        let qTimerInterval, timeLeft = 20, gameTime = 360;
+        let qTimerInterval, mainClockInterval;
+        let timeLeft = 20; 
+        let gameTime = 360; 
         let selectedLang = 'kg';
         let usedIndexes = [];
 
@@ -159,10 +160,27 @@
                 document.getElementById('s2').innerText = data.s2;
                 document.getElementById('total-words-display').innerText = data.totalWords;
                 document.getElementById('rope-group').style.transform = `translateX(${data.pos}px)`;
-                let remaining = gameTime - Math.floor((Date.now() - data.startTime) / 1000);
+                
+                // Жалпы саатты башкаруу
+                let elapsed = Math.floor((Date.now() - data.startTime) / 1000);
+                let remaining = gameTime - elapsed;
                 if(remaining <= 0) endGame(data); else updateMainClock(remaining);
             });
             nextWord();
+        }
+
+        function startQuestionTimer() {
+            clearInterval(qTimerInterval);
+            timeLeft = 20; // Ар дайым 20 секунддан баштайт
+            document.getElementById('q-timer').innerText = timeLeft;
+            qTimerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('q-timer').innerText = timeLeft;
+                if(timeLeft <= 0) { 
+                    clearInterval(qTimerInterval);
+                    nextWord(); 
+                }
+            }, 1000);
         }
 
         function nextWord() {
@@ -171,19 +189,16 @@
             do { index = Math.floor(Math.random() * allWords.length); } while (usedIndexes.includes(index));
             usedIndexes.push(index);
             currentWordIndex = index;
-            db.once('value').then(snap => { db.update({ totalWords: (snap.val().totalWords || 0) + 1 }); });
+            
+            db.once('value').then(snap => { 
+                db.update({ totalWords: (snap.val().totalWords || 0) + 1 }); 
+            });
+
             document.getElementById("question").innerText = selectedLang === 'kg' ? allWords[index].kg : allWords[index].ru;
             document.getElementById("answer").value = "";
             document.getElementById("answer").focus();
             
-            clearInterval(qTimerInterval);
-            timeLeft = 20;
-            document.getElementById('q-timer').innerText = timeLeft;
-            qTimerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('q-timer').innerText = timeLeft;
-                if(timeLeft <= 0) nextWord();
-            }, 1000);
+            startQuestionTimer();
         }
 
         function check() {
@@ -209,7 +224,8 @@
         }
 
         function endGame(data) {
-            clearInterval(qTimerInterval); db.off();
+            clearInterval(qTimerInterval); 
+            db.off();
             document.getElementById('screen-game-container').style.display = 'none';
             document.getElementById('screen-result').classList.add('active');
             let res = data.s1 > data.s2 ? "Көк топ жеңди! 🎉" : (data.s2 > data.s1 ? "Кызыл топ жеңди! 🎉" : "Тең чыгуу!");

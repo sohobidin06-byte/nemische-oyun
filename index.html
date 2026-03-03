@@ -58,12 +58,12 @@
     </div>
 
     <div id="screen-game-container" style="display:none;">
-        <div class="game-timer-ui">⏳ Калган убакыт: <span id="main-clock">06:00</span></div>
+        <div class="game-timer-ui">⏳ Оюндун убактысы: <span id="main-clock">25:00</span></div>
         <div style="color:white; font-weight:bold; margin-top:5px;">Сөздөр: <span id="total-words-display">0</span> | Сөзгө берилген убакыт: <span id="q-timer" style="color:#ffeb3b; font-size: 20px;">20</span>с</div>
         <div class="screen" style="display:block; margin-top:10px;">
             <div class="battle-field"><div id="rope-group">🧑🏻‍💼 🟦—🟥 👩🏻‍💼</div></div>
             <div class="quiz-card">
-                <h3 id="question" style="font-size: 26px; margin-top: 5px;">...</h3>
+                <h3 id="question" style="font-size: 24px; margin-top: 5px;">...</h3>
                 <input type="text" id="answer" placeholder="Немисчесин жаз..." autocomplete="off">
                 <button style="background:#4caf50; color:white; width:100%; font-size:20px;" onclick="check()">ЖӨНӨТҮҮ!</button>
             </div>
@@ -85,41 +85,56 @@
         firebase.initializeApp(firebaseConfig);
 
         let db, myTeam, roomPath;
-        let qTimerInterval, mainClockInterval;
-        let timeLeft = 20; 
-        let gameTime = 360; 
-        let selectedLang = 'kg';
-        let usedIndexes = [];
+        let qTimerInterval, timeLeft = 20, gameTime = 1500; // 25 минут
+        let selectedLang = 'kg', usedIndexes = [];
 
         const allWords = [
-            {kg: "Мышык", ru: "Кошка", n: "Katze"}, {kg: "Нан", ru: "Хлеб", n: "Brot"},
-            {kg: "Мектеп", ru: "Школа", n: "Schule"}, {kg: "Китеп", ru: "Книга", n: "Buch"},
-            {kg: "Суу", ru: "Вода", n: "Wasser"}, {kg: "Алма", ru: "Яблоко", n: "Apfel"},
-            {kg: "Үй", ru: "Дом", n: "Haus"}, {kg: "Убакыт", ru: "Время", n: "Zeit"},
-            {kg: "Күндүз", ru: "День", n: "Tag"}, {kg: "Түн", ru: "Ночь", n: "Nacht"},
-            {kg: "Дос", ru: "Друг", n: "Freund"}, {kg: "Мугалим", ru: "Учитель", n: "Lehrer"},
-            {kg: "Стол", ru: "Стол", n: "Tisch"}, {kg: "Орундук", ru: "Стул", n: "Stuhl"},
-            {kg: "Терезе", ru: "Окно", n: "Fenster"}, {kg: "Эшик", ru: "Дверь", n: "Tür"},
-            {kg: "Шаар", ru: "Город", n: "Stadt"}, {kg: "Өлкө", ru: "Страна", n: "Land"},
-            {kg: "Машина", ru: "Машина", n: "Auto"}, {kg: "Акча", ru: "Деньги", n: "Geld"},
-            {kg: "Дүкөн", ru: "Магазин", n: "Laden"}, {kg: "Көчө", ru: "Улица", n: "Straße"},
-            {kg: "Күн", ru: "Солнце", n: "Sonne"}, {kg: "Ай", ru: "Луна", n: "Mond"},
-            {kg: "Жылдыз", ru: "Звезда", n: "Stern"}, {kg: "Асман", ru: "Небо", n: "Himmel"},
-            {kg: "Жумуш", ru: "Работа", n: "Arbeit"}, {kg: "Үй-бүлө", ru: "Семья", n: "Familie"}
+            {n:"Energie", ru:"энергия", kg:"энергия"}, {n:"selbst", ru:"сам, самостоятельно", kg:"өзү, өз алдынча"},
+            {n:"wechseln", ru:"менять, заменять", kg:"алмаштыруу"}, {n:"Decke", ru:"потолок, одеяло", kg:"шып же жууркан"},
+            {n:"hängen", ru:"вешать, висеть", kg:"илүү же илинип туруу"}, {n:"Dank", ru:"благодарность", kg:"ыраазычылык"},
+            {n:"nichts", ru:"ничего", kg:"эч нерсе"}, {n:"Menge", ru:"количество, масса", kg:"көптүк, сан"},
+            {n:"Kugelschreiber", ru:"ручка", kg:"ручка"}, {n:"stecken", ru:"вставлять", kg:"салуу, ичинде болуу"},
+            {n:"Schloss", ru:"замок", kg:"кулпу"}, {n:"stehen", ru:"стоять", kg:"туруу (тик)"},
+            {n:"Bild", ru:"картина", kg:"сүрөт (картина)"}, {n:"Wand", ru:"стена", kg:"дубал"},
+            {n:"Katze", ru:"кошка", kg:"мышык"}, {n:"legen", ru:"класть, положить", kg:"коюу (жаткырып)"},
+            {n:"Ruhe", ru:"покой, тишина", kg:"тынчтык"}, {n:"Schild", ru:"табличка, знак", kg:"жазуу тактасы"},
+            {n:"stören", ru:"мешать, беспокоить", kg:"тоскоол болуу"}, {n:"stellen", ru:"ставить", kg:"коюу (тик туруп)"},
+            {n:"Stift", ru:"карандаш, калем", kg:"карандаш, калем"}, {n:"bauen", ru:"строить", kg:"куруу"},
+            {n:"dorthin", ru:"туда", kg:"тигил жакка"}, {n:"Pflanze", ru:"растение", kg:"өсүмдүк"},
+            {n:"Vorsicht", ru:"осторожность", kg:"сактык, этияттык"}, {n:"runter", ru:"вниз", kg:"төмөн, ылдый"},
+            {n:"fallen", ru:"падать", kg:"кулоо, жыгылуу"}, {n:"rein", ru:"внутрь", kg:"ичине"},
+            {n:"Müll", ru:"мусор", kg:"таштанды"}, {n:"raus", ru:"наружу", kg:"сыртка"},
+            {n:"reinkommen", ru:"входить", kg:"кирүү"}, {n:"Mitteilung", ru:"сообщение", kg:"билдирүү"},
+            {n:"Bewohner", ru:"житель", kg:"жашоочу (тургун)"}, {n:"trennen", ru:"разделять", kg:"ажыратуу, сорттоо"},
+            {n:"Abfall", ru:"отходы, мусор", kg:"калдыктар"}, {n:"Plastik", ru:"пластик", kg:"пластик"},
+            {n:"beachten", ru:"обращать внимание", kg:"көңүл буруу"}, {n:"Müllabfuhr", ru:"вывоз мусора", kg:"таштанды чыгаруу"},
+            {n:"Mülltonne", ru:"мусорный бак", kg:"таштанды челеги"}, {n:"abstellen", ru:"ставить, парковать", kg:"коюу, токтотуу"},
+            {n:"Einfahrt", ru:"въезд", kg:"кирүүчү жол"}, {n:"Hof", ru:"двор", kg:"короо"},
+            {n:"kündigen", ru:"расторгать", kg:"келишимди бузуу"}, {n:"Vertrag", ru:"договор", kg:"келишим"},
+            {n:"hoffen", ru:"надеяться", kg:"үмүттөнүү"}, {n:"Verständnis", ru:"понимание", kg:"түшүнүү"},
+            {n:"abschließen", ru:"запирать, заканчивать", kg:"бекитүү (кулпулоо)"}, {n:"niedrig", ru:"низкий", kg:"төмөн, жапыз"},
+            {n:"Kosten", ru:"расходы", kg:"чыгымдар"}, {n:"erhöhen", ru:"повышаться", kg:"жогорулоо"},
+            {n:"entfernen", ru:"удалять, убирать", kg:"алып салуу"}, {n:"Gegenstand", ru:"предмет, вещь", kg:"буюм, нерсе"},
+            {n:"heizen", ru:"топить, отапливать", kg:"жылытуу"}, {n:"Kinderwagen", ru:"детская коляска", kg:"балдар арабасы"},
+            {n:"Aufzug", ru:"лифт", kg:"лифт"}, {n:"Treppe", ru:"лестница", kg:"тепкич"},
+            {n:"Briefkasten", ru:"почтовый ящик", kg:"почта кутусу"}, {n:"Lösung", ru:"решение", kg:"чечим"},
+            {n:"ziemlich", ru:"довольно, весьма", kg:"бир топ, кыйла"}, {n:"recht haben", ru:"быть правым", kg:"туура айтуу"},
+            {n:"Frage", ru:"вопрос", kg:"суроо"}, {n:"Bitte", ru:"просьба", kg:"өтүнүч"},
+            {n:"Absicht", ru:"намерение", kg:"ниет, максат"}, {n:"Schicht", ru:"смена (рабочая)", kg:"нөөмөт (смена)"},
+            {n:"lassen", ru:"оставлять, позволять", kg:"калтыруу"}, {n:"werfen", ru:"бросать", kg:"ыргытуу"},
+            {n:"aufpassen", ru:"присматривать", kg:"карап туруу, көз салуу"}, {n:"gießen", ru:"поливать", kg:"сугаруу"},
+            {n:"wirklich", ru:"действительно", kg:"чынында"}, {n:"klingeln", ru:"звонить (в дверь)", kg:"коңгуроо кагуу"},
+            {n:"besprechen", ru:"обсуждать", kg:"талкуулоо"}, {n:"füttern", ru:"кормить (животных)", kg:"тамак берүү"},
+            {n:"Handwerker", ru:"мастер, ремонтник", kg:"уста"}
         ];
 
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const r = urlParams.get('room');
-            if (r) {
-                document.getElementById('room-id').value = r;
-                document.getElementById('share-link-area').style.display = 'block';
-            }
+            if (r) { document.getElementById('room-id').value = r; document.getElementById('share-link-area').style.display = 'block'; }
         };
 
-        document.getElementById('room-id').oninput = function() {
-            document.getElementById('share-link-area').style.display = this.value.length > 0 ? 'block' : 'none';
-        };
+        document.getElementById('room-id').oninput = function() { document.getElementById('share-link-area').style.display = this.value.length > 0 ? 'block' : 'none'; };
 
         function copyShareLink() {
             const roomCode = document.getElementById('room-id').value;
@@ -160,27 +175,11 @@
                 document.getElementById('s2').innerText = data.s2;
                 document.getElementById('total-words-display').innerText = data.totalWords;
                 document.getElementById('rope-group').style.transform = `translateX(${data.pos}px)`;
-                
-                // Жалпы саатты башкаруу
                 let elapsed = Math.floor((Date.now() - data.startTime) / 1000);
                 let remaining = gameTime - elapsed;
                 if(remaining <= 0) endGame(data); else updateMainClock(remaining);
             });
             nextWord();
-        }
-
-        function startQuestionTimer() {
-            clearInterval(qTimerInterval);
-            timeLeft = 20; // Ар дайым 20 секунддан баштайт
-            document.getElementById('q-timer').innerText = timeLeft;
-            qTimerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('q-timer').innerText = timeLeft;
-                if(timeLeft <= 0) { 
-                    clearInterval(qTimerInterval);
-                    nextWord(); 
-                }
-            }, 1000);
         }
 
         function nextWord() {
@@ -190,15 +189,20 @@
             usedIndexes.push(index);
             currentWordIndex = index;
             
-            db.once('value').then(snap => { 
-                db.update({ totalWords: (snap.val().totalWords || 0) + 1 }); 
-            });
+            db.once('value').then(snap => { db.update({ totalWords: (snap.val().totalWords || 0) + 1 }); });
 
             document.getElementById("question").innerText = selectedLang === 'kg' ? allWords[index].kg : allWords[index].ru;
             document.getElementById("answer").value = "";
             document.getElementById("answer").focus();
             
-            startQuestionTimer();
+            clearInterval(qTimerInterval);
+            timeLeft = 20;
+            document.getElementById('q-timer').innerText = timeLeft;
+            qTimerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('q-timer').innerText = timeLeft;
+                if(timeLeft <= 0) nextWord();
+            }, 1000);
         }
 
         function check() {
@@ -224,8 +228,7 @@
         }
 
         function endGame(data) {
-            clearInterval(qTimerInterval); 
-            db.off();
+            clearInterval(qTimerInterval); db.off();
             document.getElementById('screen-game-container').style.display = 'none';
             document.getElementById('screen-result').classList.add('active');
             let res = data.s1 > data.s2 ? "Көк топ жеңди! 🎉" : (data.s2 > data.s1 ? "Кызыл топ жеңди! 🎉" : "Тең чыгуу!");

@@ -30,20 +30,32 @@
         #rope-group { position: absolute; width: 100%; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; justify-content: center; font-size: 50px; }
         .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 25px; }
         .game-timer-ui { color: white; font-weight: bold; font-size: 22px; text-shadow: 2px 2px 8px rgba(0,0,0,0.7); }
+        .share-box { margin-top: 15px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 15px; font-size: 13px; border: 1px dashed #4caf50; color: #1b5e20; }
+        .ai-badge { background: #000; color: #fff; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 12px; letter-spacing: 2px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div id="screen-login" class="screen active">
-        <h2 style="color:var(--navy)">Willkommen! 🇩🇪</h2>
+        <div class="ai-badge">GEMINI AI SYSTEM</div>
+        <h2 style="color:var(--navy); margin-top:0;">Willkommen! 🇩🇪</h2>
         <div style="display:flex; justify-content: space-between; margin-bottom: 15px;">
             <button id="btn-kg" class="lang-btn lang-active" onclick="setLang('kg')">Кыргызча</button>
             <button id="btn-ru" class="lang-btn" onclick="setLang('ru')">Русский</button>
         </div>
+        <hr style="opacity:0.2">
         <input type="text" id="user-name" placeholder="Атыңызды жазыңыз">
-        <input type="text" id="room-id" placeholder="Бөлмө коду">
-        <button class="btn-blue" style="width:100%" onclick="startApp(1)">Көк топ (🟦)</button>
-        <button class="btn-red" style="width:100%" onclick="startApp(2)">Кызыл топ (🟥)</button>
+        <input type="text" id="room-id" placeholder="Бөлмө коду (мис: 123)">
+        
+        <div id="share-link-area" class="share-box" style="display:none;">
+            Бул бөлмөгө досторду чакыруу:<br>
+            <button onclick="copyShareLink()" style="background:#4caf50; color:white; font-size:12px; padding:8px 15px; margin-top:8px; border-radius:10px;">Шилтемени көчүрүү 🔗</button>
+        </div>
+
+        <div style="margin-top:15px;">
+            <button class="btn-blue" style="width:100%" onclick="startApp(1)">Көк топко кир (🟦)</button>
+            <button class="btn-red" style="width:100%" onclick="startApp(2)">Кызыл топко кир (🟥)</button>
+        </div>
     </div>
 
     <div id="screen-game-container" style="display:none;">
@@ -53,8 +65,8 @@
             <div class="battle-field"><div id="rope-group">🧑🏻‍💼 🟦—🟥 👩🏻‍💼</div></div>
             <div class="quiz-card">
                 <h3 id="question" style="font-size: 26px;">...</h3>
-                <input type="text" id="answer" placeholder="Немисче..." autocomplete="off">
-                <button style="background:#4caf50; color:white; width:100%" onclick="check()">Жөнөтүү!</button>
+                <input type="text" id="answer" placeholder="Немисчесин жаз..." autocomplete="off">
+                <button style="background:#4caf50; color:white; width:100%; font-size:20px;" onclick="check()">GO!</button>
             </div>
             <div style="display:flex; justify-content: space-around; margin-top:20px; font-weight:bold; font-size:20px;">
                 <div style="color:var(--blue)">Көк: <span id="s1">0</span></div>
@@ -64,9 +76,9 @@
     </div>
 
     <div id="screen-result" class="screen">
-        <h2>Оюн аяктады!</h2>
+        <h2 style="color:var(--navy)">Оюн аяктады!</h2>
         <h1 id="winner-text">---</h1>
-        <button class="btn-blue" onclick="location.reload()">Кайра баштоо</button>
+        <button class="btn-blue" onclick="location.reload()" style="width:100%">Кайра баштоо</button>
     </div>
 
     <script>
@@ -76,7 +88,7 @@
         let db, myTeam, roomPath;
         let qTimerInterval, timeLeft = 20, gameTime = 360;
         let selectedLang = 'kg';
-        let usedIndexes = []; // Чыккан сөздөрдү сактоо
+        let usedIndexes = [];
 
         const allWords = [
             {kg: "Мышык", ru: "Кошка", n: "Katze"}, {kg: "Нан", ru: "Хлеб", n: "Brot"},
@@ -85,26 +97,34 @@
             {kg: "Үй", ru: "Дом", n: "Haus"}, {kg: "Убакыт", ru: "Время", n: "Zeit"},
             {kg: "Күндүз", ru: "День", n: "Tag"}, {kg: "Түн", ru: "Ночь", n: "Nacht"},
             {kg: "Дос", ru: "Друг", n: "Freund"}, {kg: "Мугалим", ru: "Учитель", n: "Lehrer"},
-            {kg: "Окуучу", ru: "Ученик", n: "Schüler"}, {kg: "Стол", ru: "Стол", n: "Tisch"},
-            {kg: "Орундук", ru: "Стул", n: "Stuhl"}, {kg: "Терезе", ru: "Окно", n: "Fenster"},
-            {kg: "Эшик", ru: "Дверь", n: "Tür"}, {kg: "Шаар", ru: "Город", n: "Stadt"},
-            {kg: "Өлкө", ru: "Страна", n: "Land"}, {kg: "Тил", ru: "Язык", n: "Sprache"},
-            {kg: "Жумуш", ru: "Работа", n: "Arbeit"}, {kg: "Машина", ru: "Машина", n: "Auto"},
-            {kg: "Поезд", ru: "Поезд", n: "Zug"}, {kg: "Учак", ru: "Самолет", n: "Flugzeug"},
-            {kg: "Үй-бүлө", ru: "Семья", n: "Familie"}, {kg: "Эне", ru: "Мать", n: "Mutter"},
-            {kg: "Ата", ru: "Отец", n: "Vater"}, {kg: "Бала", ru: "Ребенок", n: "Kind"},
-            {kg: "Кыз", ru: "Девочка", n: "Mädchen"}, {kg: "Жигит", ru: "Мальчик", n: "Junge"},
-            {kg: "Акча", ru: "Деньги", n: "Geld"}, {kg: "Дүкөн", ru: "Магазин", n: "Laden"},
-            {kg: "Көчө", ru: "Улица", n: "Straße"}, {kg: "Тоо", ru: "Гора", n: "Berg"},
-            {kg: "Көл", ru: "Озеро", n: "See"}, {kg: "Дарыя", ru: "Река", n: "Fluss"},
-            {kg: "Гүл", ru: "Цветок", n: "Blume"}, {kg: "Дарак", ru: "Дерево", n: "Baum"},
+            {kg: "Стол", ru: "Стол", n: "Tisch"}, {kg: "Орундук", ru: "Стул", n: "Stuhl"},
+            {kg: "Терезе", ru: "Окно", n: "Fenster"}, {kg: "Эшик", ru: "Дверь", n: "Tür"},
+            {kg: "Шаар", ru: "Город", n: "Stadt"}, {kg: "Өлкө", ru: "Страна", n: "Land"},
+            {kg: "Машина", ru: "Машина", n: "Auto"}, {kg: "Акча", ru: "Деньги", n: "Geld"},
+            {kg: "Дүкөн", ru: "Магазин", n: "Laden"}, {kg: "Көчө", ru: "Улица", n: "Straße"},
             {kg: "Күн", ru: "Солнце", n: "Sonne"}, {kg: "Ай", ru: "Луна", n: "Mond"},
             {kg: "Жылдыз", ru: "Звезда", n: "Stern"}, {kg: "Асман", ru: "Небо", n: "Himmel"},
-            {kg: "Аба", ru: "Воздух", n: "Luft"}, {kg: "От", ru: "Огонь", n: "Feuer"},
-            {kg: "Жер", ru: "Земля", n: "Erde"}, {kg: "Кат", ru: "Письмо", n: "Brief"},
-            {kg: "Сүрөт", ru: "Картина", n: "Bild"}, {kg: "Кино", ru: "Кино", n: "Kino"},
-            {kg: "Музыка", ru: "Музыка", n: "Musik"}, {kg: "Оюн", ru: "Игра", n: "Spiel"}
+            {kg: "Жумуш", ru: "Работа", n: "Arbeit"}, {kg: "Үй-бүлө", ru: "Семья", n: "Familie"}
         ];
+
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const r = urlParams.get('room');
+            if (r) {
+                document.getElementById('room-id').value = r;
+                document.getElementById('share-link-area').style.display = 'block';
+            }
+        };
+
+        document.getElementById('room-id').oninput = function() {
+            document.getElementById('share-link-area').style.display = this.value.length > 0 ? 'block' : 'none';
+        };
+
+        function copyShareLink() {
+            const roomCode = document.getElementById('room-id').value;
+            const shareUrl = window.location.origin + window.location.pathname + "?room=" + roomCode;
+            navigator.clipboard.writeText(shareUrl).then(() => alert("Шилтеме көчүрүлдү!"));
+        }
 
         function setLang(l) {
             selectedLang = l;
@@ -146,21 +166,12 @@
         }
 
         function nextWord() {
-            // Тизме түгөнсө, кайра башынан баштоо
             if (usedIndexes.length === allWords.length) usedIndexes = [];
-
             let index;
-            do {
-                index = Math.floor(Math.random() * allWords.length);
-            } while (usedIndexes.includes(index));
-
+            do { index = Math.floor(Math.random() * allWords.length); } while (usedIndexes.includes(index));
             usedIndexes.push(index);
             currentWordIndex = index;
-
-            db.once('value').then(snap => {
-                db.update({ totalWords: (snap.val().totalWords || 0) + 1 });
-            });
-
+            db.once('value').then(snap => { db.update({ totalWords: (snap.val().totalWords || 0) + 1 }); });
             document.getElementById("question").innerText = selectedLang === 'kg' ? allWords[index].kg : allWords[index].ru;
             document.getElementById("answer").value = "";
             document.getElementById("answer").focus();
@@ -201,12 +212,9 @@
             clearInterval(qTimerInterval); db.off();
             document.getElementById('screen-game-container').style.display = 'none';
             document.getElementById('screen-result').classList.add('active');
-            let res = "Тең чыгуу!";
-            if(data.s1 > data.s2) res = "Көк топ жеңди! 🎉";
-            if(data.s2 > data.s1) res = "Кызыл топ жеңди! 🎉";
+            let res = data.s1 > data.s2 ? "Көк топ жеңди! 🎉" : (data.s2 > data.s1 ? "Кызыл топ жеңди! 🎉" : "Тең чыгуу!");
             document.getElementById('winner-text').innerText = res;
         }
     </script>
 </body>
 </html>
-

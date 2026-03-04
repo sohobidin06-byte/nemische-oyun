@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Немисче Battle - Pro Edition</title>
+    <title>AI Немисче Battle - Final Version</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -20,9 +20,11 @@
         .btn-blue { background: var(--blue); color: white; width: 100%; margin-bottom: 8px; }
         .btn-red { background: var(--red); color: white; width: 100%; }
         .ai-badge { background: #000; color: #fff; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 11px; letter-spacing: 2px; margin-bottom: 15px; }
+        
         .admin-section { display: none; background: #fffde7; border: 3px dashed var(--yellow); padding: 20px; border-radius: 25px; margin-top: 20px; }
-        .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 25px; }
         #rope-display { font-size: 50px; margin: 20px 0; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #status { font-size: 13px; color: green; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -34,24 +36,24 @@
         <input type="text" id="user-name" placeholder="Атыңыз">
         <input type="text" id="room-id" placeholder="Бөлмө коду">
         
-        <p style="margin: 10px 0 5px; font-weight: bold;">Суроо кайсы тилде болсун?</p>
+        <p style="margin: 10px 0 5px; font-weight: bold;">Суроо кайсы тилде чыксын?</p>
         <select id="lang-choice">
             <option value="kg">Кыргызча суроолор 🇰🇬</option>
             <option value="ru">Орусча суроолор 🇷🇺</option>
         </select>
         
         <div style="margin-top:15px;">
-            <button class="btn-blue" onclick="startApp(1)">Көк топ 🟦</button>
-            <button class="btn-red" onclick="startApp(2)">Кызыл топ 🟥</button>
+            <button class="btn-blue" onclick="startApp(1)">Көк топко кир 🟦</button>
+            <button class="btn-red" onclick="startApp(2)">Кызыл топко кир 🟥</button>
         </div>
 
         <div id="admin-panel" class="admin-section">
-            <h3 style="color:#f57f17; margin-top:0;">🛠 Админ: Акылдуу Импорт</h3>
-            <p style="font-size: 11px; color: #555;">Формат: <b>Немисче,Кыргызча,Орусча</b><br>(Сөздөрдү үтүр же сызыкча менен бөлүңүз)</p>
+            <h3 style="color:#f57f17; margin-top:0;">🛠 Админ: Сөздөрдү Бөлүү</h3>
+            <p style="font-size: 11px; color: #555;">Формат: <b>Немисче,Кыргызча,Орусча</b><br>(Тизмени чаптаңыз, система өзү бөлүп тизип алат)</p>
             <textarea id="smart-import-area" rows="6" placeholder="Haus,Үй,Дом&#10;Brot,Нан,Хлеб"></textarea>
             <button style="background:var(--navy); color:white; width:100%;" onclick="processSmartImport()">БАЗАГА ТАК БӨЛҮП САKТОО ✅</button>
             <button style="background:#9b59b6; color:white; width:100%; margin-top:10px;" onclick="copyInviteLink()">🔗 Шилтеме көчүрүү</button>
-            <p id="status" style="font-size:13px; color:green; margin-top:10px; font-weight:bold;"></p>
+            <p id="status"></p>
         </div>
     </div>
 
@@ -60,52 +62,62 @@
         <div id="rope-display">🧑🏻‍💼 🟦—🟥 👩🏻‍💼</div>
         <div class="quiz-card">
             <h2 id="question-text" style="font-size: 32px; margin: 0 0 10px 0;">...</h2>
-            <p style="font-size:14px; opacity:0.8;">Таймер: <span id="q-timer">20</span>с</p>
+            <p style="font-size:14px; opacity:0.8;">Убакыт: <span id="q-timer">20</span>с</p>
             <input type="text" id="answer-input" placeholder="Немисчесин жаз..." autocomplete="off">
             <button style="background:var(--green); color:white; width:100%; font-size:20px; margin-top:10px;" onclick="check()">ЖӨНӨТҮҮ!</button>
         </div>
     </div>
 
     <script>
+        // FIREBASE МААЛЫМАТТАРЫ
         const firebaseConfig = { databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         let myTeam, roomPath, currentWord, qTimerInterval, gameTime = 360, wordsList = [];
         let selectedLang = 'kg';
-        const ADMIN_PASSWORD = "111";
+        const ADMIN_PASSWORD = "111"; // Бул жерден паролду өзгөртө аласыз
 
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             if (params.get('mode') === 'admin') {
-                let pass = prompt("Пароль:");
+                let pass = prompt("Админ паролду жазыңыз:");
                 if (pass === ADMIN_PASSWORD) document.getElementById('admin-panel').style.display = 'block';
                 else window.location.href = window.location.pathname;
             }
             if (params.get('room')) document.getElementById('room-id').value = params.get('room');
         };
 
+        // БАЗАДАН СӨЗДӨРДҮ ЖҮКТӨӨ
         db.ref('dictionary').on('value', (snap) => {
             const data = snap.val();
             wordsList = data ? Object.values(data) : [];
         });
 
+        // СӨЗДӨРДҮ СОРТИРОВКАЛАП БӨЛҮҮ ЖАНА САKТОО
         function processSmartImport() {
             const rawText = document.getElementById('smart-import-area').value.trim();
             if (!rawText) return alert("Текст бош!");
+            
             const lines = rawText.split('\n');
             let addedCount = 0;
 
             lines.forEach(line => {
-                // Үтүр, сызыкча же кош чекит менен так бөлөт
-                const parts = line.split(/[,,--]/).map(p => p.trim()).filter(p => p.length > 0);
+                // Система үтүр, сызыкча же кош чекит менен так бөлүп чыгат
+                const parts = line.split(/[,,--,,::]/).map(p => p.trim()).filter(p => p.length > 0);
+                
                 if (parts.length >= 3) {
-                    db.ref('dictionary').push({ n: parts[0], kg: parts[1], ru: parts[2] });
+                    db.ref('dictionary').push({
+                        n: parts[0],  // 1-Немисче
+                        kg: parts[1], // 2-Кыргызча
+                        ru: parts[2]  // 3-Орусча
+                    });
                     addedCount++;
                 }
             });
-            document.getElementById('status').innerText = `${addedCount} сөз так сакталды! 🎉`;
+            document.getElementById('status').innerText = `${addedCount} сөз так бөлүндү жана сакталды! 🎉`;
             document.getElementById('smart-import-area').value = "";
+            setTimeout(() => document.getElementById('status').innerText = "", 5000);
         }
 
         function copyInviteLink() {
@@ -118,7 +130,7 @@
         function startApp(team) {
             roomPath = document.getElementById('room-id').value.trim();
             selectedLang = document.getElementById('lang-choice').value;
-            if(!roomPath || wordsList.length === 0) return alert("Сөздөр жок же бөлмө коду ката!");
+            if(!roomPath || wordsList.length === 0) return alert("Ката! Сөздөр базада жок же код жазылган эмес.");
             
             myTeam = team;
             document.getElementById('screen-login').classList.remove('active');
@@ -127,15 +139,16 @@
             db.ref('rooms/' + roomPath).on('value', snap => {
                 const data = snap.val() || { s1:0, s2:0, pos:0, startTime: Date.now() };
                 document.getElementById('rope-display').style.transform = `translateX(${data.pos}px)`;
-                let rem = gameTime - Math.floor((Date.now() - data.startTime) / 1000);
-                if(rem <= 0) { alert("Оюн бүттү!"); location.reload(); } else updateClock(rem);
+                let elapsed = Math.floor((Date.now() - data.startTime) / 1000);
+                let rem = gameTime - elapsed;
+                if(rem <= 0) { alert("Убакыт бүттү!"); location.reload(); } else updateClock(rem);
             });
             nextWord();
         }
 
         function nextWord() {
             currentWord = wordsList[Math.floor(Math.random() * wordsList.length)];
-            // Тил тандоосуна жараша суроону чыгарат
+            // Тилге жараша суроону чыгарат
             document.getElementById('question-text').innerText = (selectedLang === 'kg') ? currentWord.kg : currentWord.ru;
             document.getElementById('answer-input').value = "";
             document.getElementById('answer-input').focus();
@@ -155,13 +168,12 @@
             if(ans === currentWord.n.toLowerCase()) {
                 db.ref('rooms/' + roomPath).once('value').then(snap => {
                     let d = snap.val() || { s1:0, s2:0, pos:0, startTime: Date.now() };
-                    // Аркан тартыш логикасы: Көк жеңсе солго (-), Кызыл жеңсе оңго (+)
                     if(myTeam === 1) { d.s1++; d.pos -= 40; } else { d.s2++; d.pos += 40; }
                     db.ref('rooms/' + roomPath).update(d);
                     nextWord();
                 });
             } else {
-                alert("Ката! Туурасы: " + currentWord.n);
+                alert("Ката! Туура жооп: " + currentWord.n);
                 nextWord();
             }
         }

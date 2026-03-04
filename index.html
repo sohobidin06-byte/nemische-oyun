@@ -15,17 +15,15 @@
         }
         .screen { display: none; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 25px; border-radius: 30px; max-width: 450px; margin: 15px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); }
         .active { display: block; }
-        input, textarea { width: 90%; padding: 12px; margin: 8px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; text-align: center; font-family: inherit; }
-        button { padding: 12px 25px; border-radius: 15px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin: 5px; transition: 0.3s; }
-        .btn-blue { background: var(--blue); color: white; width: 100%; }
+        input, textarea { width: 90%; padding: 12px; margin: 8px 0; border-radius: 12px; border: 1px solid #ccc; font-size: 16px; text-align: center; }
+        button { padding: 12px 25px; border-radius: 15px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-blue { background: var(--blue); color: white; width: 100%; margin-bottom: 5px; }
         .btn-red { background: var(--red); color: white; width: 100%; }
         .ai-badge { background: #000; color: #fff; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 11px; letter-spacing: 2px; margin-bottom: 15px; }
         
-        /* АДМИН ПАНЕЛЬ */
-        .admin-section { display: none; background: #fffde7; border: 3px dashed var(--yellow); padding: 20px; border-radius: 25px; margin-top: 20px; text-align: center; }
-        .btn-mass { background: var(--navy); color: white; width: 100%; margin-top: 10px; font-size: 18px; }
-        
-        .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 25px; margin-top: 15px; }
+        .admin-section { display: none; background: #fffde7; border: 3px dashed var(--yellow); padding: 20px; border-radius: 25px; margin-top: 20px; }
+        .btn-share { background: #9b59b6; color: white; width: 100%; margin-top: 10px; }
+        .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 25px; }
         #rope-display { font-size: 45px; margin: 20px 0; transition: 0.5s; }
     </style>
 </head>
@@ -44,12 +42,14 @@
         </div>
 
         <div id="admin-panel" class="admin-section">
-            <h3 style="margin:0; color:#f57f17;">🚀 Акылдуу Импорт</h3>
-            <p style="font-size: 12px; color: #666;">Текстти чаптаңыз (Формат: Немисче Кыргызча Орусча)</p>
+            <h3 style="margin:0; color:#f57f17;">🛠 Админ Башкаруу</h3>
             
-            <textarea id="smart-import-area" rows="8" placeholder="Мисалы:&#10;Haus Үй Дом&#10;Katze Мышык Кошка&#10;...же...&#10;Brot - Нан - Хлеб"></textarea>
+            <button class="btn-share" onclick="copyInviteLink()">🔗 Оюн шилтемесин көчүрүү</button>
             
-            <button class="btn-mass" onclick="processSmartImport()">БАЗАГА ЖҮКТӨӨ ✅</button>
+            <hr style="margin:15px 0; opacity:0.3;">
+            <p style="font-size: 12px;">Сөздөрдү чаптаңыз: (Формат: Немисче Кыргызча Орусча)</p>
+            <textarea id="smart-import-area" rows="6" placeholder="Haus Үй Дом&#10;Katze Мышык Кошка"></textarea>
+            <button style="background:var(--navy); color:white; width:100%;" onclick="processSmartImport()">БАЗАГА ЖҮКТӨӨ ✅</button>
             <p id="status" style="font-size:13px; color:green; margin-top:10px; font-weight:bold;"></p>
         </div>
     </div>
@@ -71,10 +71,24 @@
         const db = firebase.database();
 
         let myTeam, roomPath, currentWord, qTimerInterval, gameTime = 360, wordsList = [];
+        const ADMIN_PASSWORD = "111"; // Ушул жерге өзүңүз каалаган паролду жазыңыз
 
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
-            if (params.get('mode') === 'admin') document.getElementById('admin-panel').style.display = 'block';
+            // Эгер ?mode=admin болсо пароль сурайт
+            if (params.get('mode') === 'admin') {
+                let pass = prompt("Админ паролду киргизиңиз:");
+                if (pass === ADMIN_PASSWORD) {
+                    document.getElementById('admin-panel').style.display = 'block';
+                } else {
+                    alert("Пароль туура эмес!");
+                    window.location.href = window.location.pathname; // Башкы бетке кайтарат
+                }
+            }
+            // Эгер шилтемеде бөлмө коду болсо, автоматтык түрдө жазылат
+            if (params.get('room')) {
+                document.getElementById('room-id').value = params.get('room');
+            }
         };
 
         db.ref('dictionary').on('value', (snap) => {
@@ -82,31 +96,31 @@
             wordsList = data ? Object.values(data) : [];
         });
 
-        // БААРЫН БИРГЕ КИРГИЗҮҮ ФУНКЦИЯСЫ
+        // ШИЛТЕМЕ КӨЧҮРҮҮ
+        function copyInviteLink() {
+            let room = document.getElementById('room-id').value.trim();
+            if (!room) return alert("Алгач бөлмө кодун жазыңыз!");
+            
+            let link = window.location.origin + window.location.pathname + "?room=" + room;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Шилтеме көчүрүлдү! Эми муну оюнчуларга жиберсеңиз болот: " + link);
+            });
+        }
+
         function processSmartImport() {
             const rawText = document.getElementById('smart-import-area').value.trim();
-            if (!rawText) return alert("Текстти киргизиңиз!");
-
+            if (!rawText) return alert("Текст бош!");
             const lines = rawText.split('\n');
             let addedCount = 0;
-
             lines.forEach(line => {
-                // Текстти тазалап, сөздөргө бөлөт (үтүр, сызыкча же боштук боюнча)
                 const parts = line.replace(/[-]/g, ' ').split(/\s+/).filter(p => p.length > 0);
-                
                 if (parts.length >= 3) {
-                    const de = parts[0]; // Биринчи сөз - Немисче
-                    const kg = parts[1]; // Экинчи сөз - Кыргызча
-                    const ru = parts.slice(2).join(' '); // Калганы - Орусча (кээде орусчасы 2 сөздөн турат)
-                    
-                    db.ref('dictionary').push({ n: de, kg: kg, ru: ru });
+                    db.ref('dictionary').push({ n: parts[0], kg: parts[1], ru: parts.slice(2).join(' ') });
                     addedCount++;
                 }
             });
-
-            document.getElementById('status').innerText = `${addedCount} сөз ийгиликтүү кошулду! 🎉`;
+            document.getElementById('status').innerText = `${addedCount} сөз кошулду! 🎉`;
             document.getElementById('smart-import-area').value = "";
-            setTimeout(() => document.getElementById('status').innerText = "", 5000);
         }
 
         function startApp(team) {
@@ -115,12 +129,10 @@
             myTeam = team;
             document.getElementById('screen-login').classList.remove('active');
             document.getElementById('screen-game').classList.add('active');
-            
             db.ref('rooms/' + roomPath).on('value', snap => {
                 const data = snap.val() || { s1:0, s2:0, pos:0, startTime: Date.now() };
                 document.getElementById('rope-display').style.transform = `translateX(${data.pos}px)`;
-                let elapsed = Math.floor((Date.now() - data.startTime) / 1000);
-                let rem = gameTime - elapsed;
+                let rem = gameTime - Math.floor((Date.now() - data.startTime) / 1000);
                 if(rem <= 0) location.reload(); else updateClock(rem);
             });
             nextWord();
@@ -149,10 +161,7 @@
                     db.ref('rooms/' + roomPath).update(d);
                     nextWord();
                 });
-            } else {
-                alert("Ката! Туурасы: " + currentWord.n);
-                nextWord();
-            }
+            } else { alert("Туурасы: " + currentWord.n); nextWord(); }
         }
 
         function updateClock(s) {

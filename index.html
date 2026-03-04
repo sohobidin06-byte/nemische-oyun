@@ -22,13 +22,11 @@
         .ai-badge { background: #000; color: #fff; padding: 5px 15px; border-radius: 20px; display: inline-block; font-size: 11px; letter-spacing: 2px; margin-bottom: 15px; }
         
         /* АДМИН ПАНЕЛЬ */
-        .admin-section { display: none; background: #fffde7; border: 3px dashed var(--yellow); padding: 20px; border-radius: 25px; margin-top: 20px; text-align: left; }
-        .btn-add { background: var(--green); color: white; width: 100%; margin-top: 5px; }
-        .btn-mass { background: var(--blue); color: white; width: 100%; margin-top: 10px; }
+        .admin-section { display: none; background: #fffde7; border: 3px dashed var(--yellow); padding: 20px; border-radius: 25px; margin-top: 20px; text-align: center; }
+        .btn-mass { background: var(--navy); color: white; width: 100%; margin-top: 10px; font-size: 18px; }
         
-        /* ОЮН ТАЛААСЫ */
         .quiz-card { background: var(--navy); color: white; padding: 25px; border-radius: 25px; margin-top: 15px; }
-        #rope-display { font-size: 45px; margin: 20px 0; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #rope-display { font-size: 45px; margin: 20px 0; transition: 0.5s; }
     </style>
 </head>
 <body>
@@ -36,141 +34,94 @@
     <div id="screen-login" class="screen active">
         <div class="ai-badge">GEMINI AI SYSTEM</div>
         <h2 style="color:var(--navy); margin:0;">Willkommen! 🇩🇪</h2>
-        <p style="font-size: 14px; color: #666;">Немис тили боюнча салгылашуу</p>
         
-        <input type="text" id="user-name" placeholder="Атыңызды жазыңыз">
-        <input type="text" id="room-id" placeholder="Бөлмө коду (мис: 777)">
+        <input type="text" id="user-name" placeholder="Атыңыз">
+        <input type="text" id="room-id" placeholder="Бөлмө коду">
         
         <div style="margin-top:10px;">
-            <button class="btn-blue" onclick="startApp(1)">Көк топко кир 🟦</button>
-            <button class="btn-red" onclick="startApp(2)">Кызыл топко кир 🟥</button>
+            <button class="btn-blue" onclick="startApp(1)">Көк топ 🟦</button>
+            <button class="btn-red" onclick="startApp(2)">Кызыл топ 🟥</button>
         </div>
 
         <div id="admin-panel" class="admin-section">
-            <h3 style="margin:0 0 10px 0; color:#f57f17; text-align:center;">🛠 Админ Панель</h3>
+            <h3 style="margin:0; color:#f57f17;">🚀 Акылдуу Импорт</h3>
+            <p style="font-size: 12px; color: #666;">Текстти чаптаңыз (Формат: Немисче Кыргызча Орусча)</p>
             
-            <label style="font-weight:bold; font-size:12px;">Бирден кошуу:</label>
-            <input type="text" id="new-de" placeholder="Немисче (Haus)">
-            <input type="text" id="new-kg" placeholder="Кыргызча (Үй)">
-            <input type="text" id="new-ru" placeholder="Орусча (Дом)">
-            <button class="btn-add" onclick="addNewWord()">БАЗАГА КОШУУ 📥</button>
+            <textarea id="smart-import-area" rows="8" placeholder="Мисалы:&#10;Haus Үй Дом&#10;Katze Мышык Кошка&#10;...же...&#10;Brot - Нан - Хлеб"></textarea>
             
-            <hr style="margin:20px 0; opacity:0.2;">
-            
-            <label style="font-weight:bold; font-size:12px;">Тизме менен кошуу (Масс импорт):</label>
-            <p style="font-size: 10px; color: #888; margin: 2px 0;">Формат: Немисче,Кыргызча,Орусча (ар бир сөз жаңы сапта)</p>
-            <textarea id="mass-words" rows="5" placeholder="Katze,Мышык,Кошка&#10;Brot,Нан,Хлеб"></textarea>
-            <button class="btn-mass" onclick="importMassWords()">ТИЗМЕНИ ЖҮКТӨӨ 🚀</button>
-            
-            <p id="status" style="font-size:12px; color:green; text-align:center; margin-top:10px; font-weight:bold;"></p>
+            <button class="btn-mass" onclick="processSmartImport()">БАЗАГА ЖҮКТӨӨ ✅</button>
+            <p id="status" style="font-size:13px; color:green; margin-top:10px; font-weight:bold;"></p>
         </div>
     </div>
 
     <div id="screen-game" class="screen">
-        <div style="font-size: 24px; font-weight: bold; color: var(--navy);">⏳ <span id="main-clock">06:00</span></div>
+        <div style="font-size: 24px; font-weight: bold;">⏳ <span id="main-clock">06:00</span></div>
         <div id="rope-display">🧑🏻‍💼 🟦—🟥 👩🏻‍💼</div>
-        
         <div class="quiz-card">
-            <h2 id="question-text" style="font-size: 30px; margin-bottom: 5px;">...</h2>
-            <p style="font-size:12px; opacity: 0.8;">Убакыт: <span id="q-timer">20</span>с</p>
+            <h2 id="question-text" style="font-size: 28px;">...</h2>
+            <p style="font-size:12px;">Таймер: <span id="q-timer">20</span>с</p>
             <input type="text" id="answer-input" placeholder="Немисчесин жаз..." autocomplete="off">
-            <button style="background:var(--green); color:white; width:100%; font-size:20px; margin-top:10px;" onclick="check()">ЖӨНӨТҮҮ!</button>
-        </div>
-
-        <div style="display:flex; justify-content: space-around; margin-top:20px; font-weight:bold; font-size:20px;">
-            <div style="color:var(--blue)">Көк: <span id="s1">0</span></div>
-            <div style="color:var(--red)">Кызыл: <span id="s2">0</span></div>
+            <button style="background:var(--green); color:white; width:100%; font-size:20px;" onclick="check()">ЖӨНӨТҮҮ</button>
         </div>
     </div>
 
     <script>
-        // БАЗА ТУТАШТЫРУУ
         const firebaseConfig = { databaseURL: "https://germangame-b5626-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let myTeam, roomPath, currentWord, qTimerInterval, gameTime = 360;
-        let wordsList = [];
+        let myTeam, roomPath, currentWord, qTimerInterval, gameTime = 360, wordsList = [];
 
-        // 1. АДМИНДИ ТЕКШЕРҮҮ
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
-            if (params.get('mode') === 'admin') {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
+            if (params.get('mode') === 'admin') document.getElementById('admin-panel').style.display = 'block';
         };
 
-        // 2. БАЗАДАН СӨЗДӨРДҮ АЛУУ
         db.ref('dictionary').on('value', (snap) => {
             const data = snap.val();
             wordsList = data ? Object.values(data) : [];
         });
 
-        // 3. БИРДЕН СӨЗ КОШУУ
-        function addNewWord() {
-            const de = document.getElementById('new-de').value.trim();
-            const kg = document.getElementById('new-kg').value.trim();
-            const ru = document.getElementById('new-ru').value.trim();
+        // БААРЫН БИРГЕ КИРГИЗҮҮ ФУНКЦИЯСЫ
+        function processSmartImport() {
+            const rawText = document.getElementById('smart-import-area').value.trim();
+            if (!rawText) return alert("Текстти киргизиңиз!");
 
-            if(!de || !kg || !ru) return alert("Толук толтуруңуз!");
-
-            db.ref('dictionary').push({ n: de, kg: kg, ru: ru }).then(() => {
-                showStatus("Сөз кошулду!");
-                document.getElementById('new-de').value = "";
-                document.getElementById('new-kg').value = "";
-                document.getElementById('new-ru').value = "";
-            });
-        }
-
-        // 4. ТИЗМЕ МЕНЕН КОШУУ (МАСС)
-        function importMassWords() {
-            const text = document.getElementById('mass-words').value.trim();
-            if (!text) return alert("Тизме бош!");
-
-            const lines = text.split('\n');
-            let count = 0;
+            const lines = rawText.split('\n');
+            let addedCount = 0;
 
             lines.forEach(line => {
-                const parts = line.split(',');
+                // Текстти тазалап, сөздөргө бөлөт (үтүр, сызыкча же боштук боюнча)
+                const parts = line.replace(/[-]/g, ' ').split(/\s+/).filter(p => p.length > 0);
+                
                 if (parts.length >= 3) {
-                    db.ref('dictionary').push({
-                        n: parts[0].trim(),
-                        kg: parts[1].trim(),
-                        ru: parts[2].trim()
-                    });
-                    count++;
+                    const de = parts[0]; // Биринчи сөз - Немисче
+                    const kg = parts[1]; // Экинчи сөз - Кыргызча
+                    const ru = parts.slice(2).join(' '); // Калганы - Орусча (кээде орусчасы 2 сөздөн турат)
+                    
+                    db.ref('dictionary').push({ n: de, kg: kg, ru: ru });
+                    addedCount++;
                 }
             });
 
-            showStatus(`${count} сөз ийгиликтүү жүктөлдү!`);
-            document.getElementById('mass-words').value = "";
+            document.getElementById('status').innerText = `${addedCount} сөз ийгиликтүү кошулду! 🎉`;
+            document.getElementById('smart-import-area').value = "";
+            setTimeout(() => document.getElementById('status').innerText = "", 5000);
         }
 
-        function showStatus(msg) {
-            const s = document.getElementById('status');
-            s.innerText = msg;
-            setTimeout(() => s.innerText = "", 4000);
-        }
-
-        // 5. ОЮН ЛОГИКАСЫ
         function startApp(team) {
             roomPath = document.getElementById('room-id').value.trim();
-            if(!roomPath) return alert("Бөлмө кодун жазыңыз!");
-            if(wordsList.length === 0) return alert("Базада сөз жок! Алдын ала сөз кошуңуз.");
-
+            if(!roomPath || wordsList.length === 0) return alert("Маалымат жетишсиз!");
             myTeam = team;
             document.getElementById('screen-login').classList.remove('active');
             document.getElementById('screen-game').classList.add('active');
             
             db.ref('rooms/' + roomPath).on('value', snap => {
                 const data = snap.val() || { s1:0, s2:0, pos:0, startTime: Date.now() };
-                document.getElementById('s1').innerText = data.s1;
-                document.getElementById('s2').innerText = data.s2;
                 document.getElementById('rope-display').style.transform = `translateX(${data.pos}px)`;
-                
                 let elapsed = Math.floor((Date.now() - data.startTime) / 1000);
                 let rem = gameTime - elapsed;
-                if(rem <= 0) { alert("Оюн аяктады!"); location.reload(); } else updateClock(rem);
+                if(rem <= 0) location.reload(); else updateClock(rem);
             });
             nextWord();
         }
@@ -180,10 +131,8 @@
             document.getElementById('question-text').innerText = currentWord.kg;
             document.getElementById('answer-input').value = "";
             document.getElementById('answer-input').focus();
-            
             let timeLeft = 20;
             clearInterval(qTimerInterval);
-            document.getElementById('q-timer').innerText = timeLeft;
             qTimerInterval = setInterval(() => {
                 timeLeft--;
                 document.getElementById('q-timer').innerText = timeLeft;
@@ -207,8 +156,8 @@
         }
 
         function updateClock(s) {
-            let min = Math.floor(s/60), sec = s%60;
-            document.getElementById('main-clock').innerText = `${min}:${sec<10?'0':''}${sec}`;
+            let m = Math.floor(s/60), sec = s%60;
+            document.getElementById('main-clock').innerText = `${m}:${sec<10?'0':''}${sec}`;
         }
     </script>
 </body>
